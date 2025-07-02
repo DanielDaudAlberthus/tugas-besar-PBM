@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses ke galeri foto Anda untuk mengunggah gambar cover buku.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses ke kamera Anda untuk mengambil gambar cover buku.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses ke mikrofon Anda untuk mengambil video (jika image_picker juga digunakan untuk video).</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

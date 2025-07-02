@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'
-    as auth; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 
-// Kita masih bisa menggunakan kelas User kita sendiri untuk data tambahan
-// Selain data yang langsung dari Firebase User.
+// Kelas AppUser untuk data pengguna kita
 class AppUser {
-  // Ganti nama kelas User menjadi AppUser untuk menghindari konflik dengan firebase_auth.User
   String uid; // User ID dari Firebase
   String name;
   String email;
@@ -34,49 +31,38 @@ class AppUser {
 }
 
 class UserProvider extends ChangeNotifier {
-  final auth.FirebaseAuth _firebaseAuth =
-      auth.FirebaseAuth.instance; // Instance Firebase Auth
+  final auth.FirebaseAuth _firebaseAuth = auth.FirebaseAuth.instance;
 
-  AppUser? _currentUser; // Menggunakan AppUser kita
-  bool _isLoading = false; // Untuk indikator loading
+  AppUser? _currentUser;
+  bool _isLoading = false;
 
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
 
   UserProvider() {
-    // Dengarkan perubahan status autentikasi Firebase
     _firebaseAuth.authStateChanges().listen((auth.User? firebaseUser) {
       if (firebaseUser != null) {
-        // Pengguna login atau baru terdaftar
         _currentUser = AppUser(
           uid: firebaseUser.uid,
-          name:
-              firebaseUser.displayName ??
-              firebaseUser.email!.split(
-                '@',
-              )[0], // Gunakan displayName atau ambil dari email
+          name: firebaseUser.displayName ?? firebaseUser.email!.split('@')[0],
           email: firebaseUser.email!,
           profileImageUrl: firebaseUser.photoURL,
         );
       } else {
-        // Pengguna logout
         _currentUser = null;
       }
-      notifyListeners(); // Beri tahu UI bahwa status telah berubah
+      notifyListeners();
     });
   }
 
-  // Metode untuk mendaftar pengguna baru
   Future<void> signUp(String email, String password, String name) async {
     _isLoading = true;
     notifyListeners();
     try {
       auth.UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
-      // Update display name (nama pengguna) di Firebase User
       await userCredential.user?.updateDisplayName(name);
-      // Di sini Anda juga bisa menyimpan data AppUser ke Firestore jika ada data tambahan yang perlu disimpan
       _currentUser = AppUser(
         uid: userCredential.user!.uid,
         name: name,
@@ -85,21 +71,21 @@ class UserProvider extends ChangeNotifier {
       );
     } catch (e) {
       print('Error during sign up: $e');
-      rethrow; // Lempar error kembali agar bisa ditangani di UI
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Metode untuk login pengguna
   Future<void> signIn(String email, String password) async {
     _isLoading = true;
     notifyListeners();
     try {
-      auth.UserCredential userCredential = await _firebaseAuth
-          .signInWithEmailAndPassword(email: email, password: password);
-      // Data _currentUser akan otomatis diisi oleh stream authStateChanges
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } catch (e) {
       print('Error during sign in: $e');
       rethrow;
@@ -109,13 +95,11 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  // Metode untuk logout
   Future<void> signOut() async {
     _isLoading = true;
     notifyListeners();
     try {
       await _firebaseAuth.signOut();
-      // _currentUser akan otomatis null oleh stream authStateChanges
     } catch (e) {
       print('Error during sign out: $e');
       rethrow;
@@ -125,7 +109,6 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  // Metode untuk memperbarui profil (nama dan email)
   Future<void> updateProfile({String? name, String? email}) async {
     _isLoading = true;
     notifyListeners();
@@ -136,11 +119,11 @@ class UserProvider extends ChangeNotifier {
           await firebaseUser.updateDisplayName(name);
         }
         if (email != null && email != firebaseUser.email) {
-          // Firebase mengharuskan verifikasi email ulang jika diubah
           await firebaseUser.updateEmail(email);
-          // Anda mungkin ingin menampilkan pesan kepada pengguna untuk memverifikasi email baru mereka
+          // Opsi: ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+          //   const SnackBar(content: Text('Email telah diubah. Mohon verifikasi email baru Anda.')),
+          // );
         }
-        // Perbarui _currentUser lokal setelah perubahan sukses
         _currentUser = _currentUser?.copyWith(
           name: firebaseUser.displayName ?? _currentUser?.name,
           email: firebaseUser.email ?? _currentUser?.email,
@@ -157,7 +140,6 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  // Untuk ganti password
   Future<void> changePassword(String newPassword) async {
     _isLoading = true;
     notifyListeners();
@@ -165,15 +147,15 @@ class UserProvider extends ChangeNotifier {
       auth.User? firebaseUser = _firebaseAuth.currentUser;
       if (firebaseUser != null) {
         await firebaseUser.updatePassword(newPassword);
-        ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
-          const SnackBar(content: Text('Kata sandi berhasil diperbarui!')),
-        );
+        // Opsi: ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        //   const SnackBar(content: Text('Kata sandi berhasil diperbarui!')),
+        // );
       }
     } catch (e) {
       print('Error changing password: $e');
-      ScaffoldMessenger.of(
-        navigatorKey.currentContext!,
-      ).showSnackBar(SnackBar(content: Text('Gagal mengganti kata sandi: $e')));
+      // Opsi: ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+      //     SnackBar(content: Text('Gagal mengganti kata sandi: $e')),
+      // );
       rethrow;
     } finally {
       _isLoading = false;
@@ -182,5 +164,5 @@ class UserProvider extends ChangeNotifier {
   }
 }
 
-// GlobalKey untuk Navigator state
+// GlobalKey untuk Navigator state - HARUS DI LUAR KELAS UserProvider
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

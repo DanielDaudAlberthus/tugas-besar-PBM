@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart'
-    as auth; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:library_app/firebase_options.dart';
 
 import 'package:library_app/screens/welcome_screen.dart';
-import 'package:library_app/screens/home_screen.dart'; // Import HomeScreen
+import 'package:library_app/screens/home_screen.dart';
 import 'package:library_app/providers/book_provider.dart';
-import 'package:library_app/providers/user_provider.dart'; // UserProvider
+import 'package:library_app/providers/user_provider.dart';
+import 'package:library_app/providers/notification_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +20,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => BookProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (context) => NotificationProvider()),
       ],
       child: const MyApp(),
     ),
@@ -31,7 +32,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dapatkan status autentikasi saat ini
     final auth.FirebaseAuth firebaseAuth = auth.FirebaseAuth.instance;
 
     return MaterialApp(
@@ -40,22 +40,33 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      navigatorKey: navigatorKey, // Tambahkan ini
-      // Cek apakah pengguna sudah login saat aplikasi dimulai
+      navigatorKey: navigatorKey,
       home: StreamBuilder<auth.User?>(
-        // Dengarkan perubahan status autentikasi
         stream: firebaseAuth.authStateChanges(),
         builder: (context, snapshot) {
+          final notificationProvider = Provider.of<NotificationProvider>(
+            context,
+            listen: false,
+          );
+
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            ); // Tampilkan loading
+            return const Center(child: CircularProgressIndicator());
           }
+
+          final String? userId = snapshot.hasData ? snapshot.data!.uid : null;
+
+          // --- PERBAIKAN DI SINI: Tunda panggilan setUserId ---
+          // Ini memastikan panggilan setUserId (yang memicu notifyListeners)
+          // terjadi SETELAH StreamBuilder selesai membangun widget-nya,
+          // sehingga tidak ada konflik selama build phase.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notificationProvider.setUserId(userId);
+          });
+          // --- AKHIR PERBAIKAN ---
+
           if (snapshot.hasData) {
-            // Pengguna sudah login
             return const HomeScreen();
           } else {
-            // Pengguna belum login
             return const WelcomeScreen();
           }
         },

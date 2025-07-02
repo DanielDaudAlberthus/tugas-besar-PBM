@@ -6,6 +6,10 @@ import 'package:library_app/screens/add_book_screen.dart';
 import 'package:library_app/screens/book_detail_screen.dart';
 import 'package:library_app/screens/account_screen.dart';
 import 'package:library_app/screens/borrowed_books_screen.dart';
+import 'package:library_app/providers/notification_provider.dart';
+import 'package:library_app/screens/notification_screen.dart';
+import 'package:library_app/providers/user_provider.dart';
+import 'package:library_app/models/app_notification.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -59,7 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<BookProvider>(
+      // Consumer untuk BookProvider
       builder: (context, bookProvider, child) {
+        final notificationProvider = Provider.of<NotificationProvider>(
+          context,
+        ); // Tidak perlu listen: false di sini jika pakai Consumer di badge
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final currentUserId = userProvider.currentUser?.uid;
+
         final List<Book> displayedBooks = _searchController.text.isEmpty
             ? bookProvider.books
             : bookProvider.searchBooks(_searchController.text);
@@ -68,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            toolbarHeight: 140, // Tetap tinggi agar search bar muat
+            toolbarHeight: 130,
             flexibleSpace: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -99,16 +110,54 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.black,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.notifications_none,
-                            color: Colors.black,
-                          ),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Notifikasi (simulasi)!'),
-                              ),
+                        // Ikon Notifikasi dengan Badge - DIBUNGKUS DENGAN Consumer NotificationProvider
+                        Consumer<NotificationProvider>(
+                          builder: (context, notificationProvider, child) {
+                            print(
+                              'DEBUG: HomeScreen Consumer rebuilding for NotificationProvider. Unread count: ${notificationProvider.unreadCount}',
+                            ); // ADDED PRINT
+                            return Stack(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.notifications_none,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const NotificationScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                if (notificationProvider.unreadCount > 0)
+                                  Positioned(
+                                    right: 8,
+                                    top: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 12,
+                                        minHeight: 12,
+                                      ),
+                                      child: Text(
+                                        '${notificationProvider.unreadCount}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 8,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             );
                           },
                         ),
@@ -133,18 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // >>> HAPUS BLOK 'actions' DARI SINI <<<
-            // actions: [
-            //   IconButton(
-            //     icon: const Icon(Icons.add, color: Colors.black),
-            //     onPressed: () {
-            //       Navigator.push(
-            //         context,
-            //         MaterialPageRoute(builder: (context) => const AddBookScreen()),
-            //       );
-            //     },
-            //   ),
-            // ],
           ),
           body: bookProvider.isLoading && displayedBooks.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -306,15 +343,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                         book.id!,
                                         !book.isBorrowed,
                                       );
+                                      String statusMessage = book.isBorrowed
+                                          ? "dikembalikan"
+                                          : "dipinjam";
+                                      if (currentUserId != null) {
+                                        final notification = AppNotification(
+                                          id: '',
+                                          title: 'Status Buku Berubah!',
+                                          message:
+                                              'Buku "${book.title}" sekarang telah $statusMessage.',
+                                          timestamp: DateTime.now(),
+                                          type: 'book_status_change',
+                                          relatedItemId: book.id,
+                                          userId: currentUserId,
+                                        );
+                                        await notificationProvider
+                                            .addNotification(notification);
+                                      }
                                       if (!context.mounted) return;
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            book.isBorrowed
-                                                ? 'Buku "${book.title}" dikembalikan.'
-                                                : 'Buku "${book.title}" dipinjam.',
+                                            'Buku "${book.title}" telah $statusMessage.',
                                           ),
                                         ),
                                       );
@@ -354,6 +406,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                       if (confirmDelete) {
                                         await bookProvider.deleteBook(book.id!);
+                                        if (currentUserId != null) {
+                                          final notification = AppNotification(
+                                            id: '',
+                                            title: 'Buku Dihapus!',
+                                            message:
+                                                'Buku "${book.title}" telah dihapus dari perpustakaan.',
+                                            timestamp: DateTime.now(),
+                                            type: 'book_deleted',
+                                            userId: currentUserId,
+                                          );
+                                          await notificationProvider
+                                              .addNotification(notification);
+                                        }
                                         if (!context.mounted) return;
                                         ScaffoldMessenger.of(
                                           context,
@@ -376,7 +441,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-
           bottomNavigationBar: BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
@@ -390,7 +454,6 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedItemColor: Colors.blue,
             onTap: _onItemTapped,
           ),
-          // >>> TAMBAHKAN FLOATING ACTION BUTTON DI SINI <<<
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               Navigator.push(
@@ -401,7 +464,6 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.blue,
             child: const Icon(Icons.add, color: Colors.white),
           ),
-          // >>> AKHIR FLOATING ACTION BUTTON <<<
         );
       },
     );
