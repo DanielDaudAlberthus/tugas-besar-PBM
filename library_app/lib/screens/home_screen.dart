@@ -1,3 +1,5 @@
+// lib/screens/home_screen.dart
+// IMPORTS ANDA SAMA PERSIS SEPERTI YANG ANDA BERIKAN
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:library_app/providers/book_provider.dart';
@@ -27,12 +29,28 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<BookProvider>(context, listen: false).fetchBooks();
+      // >>> HAPUS PEMANGGILAN _loadNotifications() DI SINI <<<
+      // _loadNotifications(); // BARIS INI TIDAK PERLU LAGI
     });
 
     _searchController.addListener(() {
       setState(() {});
     });
   }
+
+  // >>> HAPUS SELURUH FUNGSI _loadNotifications() INI <<<
+  // void _loadNotifications() async {
+  //   final userProvider = Provider.of<UserProvider>(context, listen: false);
+  //   final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+  //   final String? currentUserId = userProvider.userId;
+  //   if (currentUserId != null && notificationProvider.notifications.isEmpty && !notificationProvider.isLoading) {
+  //     print('DEBUG: HomeScreen: Calling getNotifications from _loadNotifications for User ID: $currentUserId');
+  //     // await notificationProvider.getNotifications(currentUserId); // Metode ini tidak ada
+  //   } else {
+  //       print('DEBUG: HomeScreen: Not calling getNotifications. userId: $currentUserId, isEmpty: ${notificationProvider.notifications.isEmpty}, isLoading: ${notificationProvider.isLoading}');
+  //   }
+  // }
+  // >>> AKHIR HAPUS FUNGSI _loadNotifications() <<<
 
   void _onItemTapped(int index) {
     setState(() {
@@ -64,22 +82,28 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
-        final notificationProvider = Provider.of<NotificationProvider>(
-          context,
-        ); // Listen to notificationProvider for badge updates
-        final userProvider = Provider.of<UserProvider>(
-          context,
-        ); // Ambil UserProvider tanpa listen: false untuk mendapatkan role terbaru
-        final currentUserId = userProvider.currentUser?.uid;
-        final currentUserRole =
-            userProvider.currentUser?.role; // <--- Ambil role secara eksplisit
-        final isAdmin = currentUserRole == 'admin'; // <--- Gunakan variabel ini
+        // Ambil NotificationProvider dan UserProvider untuk digunakan di UI.
+        // Listen: true untuk notifikasi agar badge dan UI notifikasi diperbarui.
+        final notificationProvider = Provider.of<NotificationProvider>(context);
+        final userProvider = Provider.of<UserProvider>(context);
 
-        // --- TAMBAHKAN PRINT DEBUG INI ---
+        final currentUserId = userProvider
+            .userId; // Getter userId sudah ditambahkan di UserProvider
+        final currentUserRole = userProvider.currentUser?.role;
+        final isAdmin = currentUserRole == 'admin';
+
         print('DEBUG: HomeScreen: User ID: $currentUserId');
         print('DEBUG: HomeScreen: User Role from Provider: $currentUserRole');
         print('DEBUG: HomeScreen: Is Admin (calculated): $isAdmin');
-        // --- AKHIR PRINT DEBUG ---
+        print(
+          'DEBUG: HomeScreen: NotificationProvider.isLoading: ${notificationProvider.isLoading}',
+        );
+        print(
+          'DEBUG: HomeScreen: Notifications count: ${notificationProvider.notifications.length}',
+        );
+        print(
+          'DEBUG: HomeScreen: Unread count: ${notificationProvider.unreadCount}',
+        );
 
         final List<Book> displayedBooks = _searchController.text.isEmpty
             ? bookProvider.books
@@ -120,56 +144,49 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.black,
                           ),
                         ),
-                        // Ikon Notifikasi dengan Badge - DIBUNGKUS DENGAN Consumer NotificationProvider
-                        Consumer<NotificationProvider>(
-                          builder: (context, notificationProvider, child) {
-                            print(
-                              'DEBUG: HomeScreen Consumer rebuilding for NotificationProvider. Unread count: ${notificationProvider.unreadCount}',
-                            );
-                            return Stack(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.notifications_none,
-                                    color: Colors.black,
+                        // Ikon Notifikasi dengan Badge
+                        Stack(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.notifications_none,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const NotificationScreen(),
                                   ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const NotificationScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                if (notificationProvider.unreadCount > 0)
-                                  Positioned(
-                                    right: 8,
-                                    top: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 12,
-                                        minHeight: 12,
-                                      ),
-                                      child: Text(
-                                        '${notificationProvider.unreadCount}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 8,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
+                                );
+                              },
+                            ),
+                            if (notificationProvider.unreadCount > 0)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 12,
+                                    minHeight: 12,
+                                  ),
+                                  child: Text(
+                                    '${notificationProvider.unreadCount}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
                                     ),
+                                    textAlign: TextAlign.center,
                                   ),
-                              ],
-                            );
-                          },
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -193,7 +210,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          body: bookProvider.isLoading && displayedBooks.isEmpty
+          // Tambahkan CircularProgressIndicator jika notifikasi sedang dimuat
+          body:
+              notificationProvider
+                  .isLoading // Periksa isLoading NotificationProvider
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.green,
+                    ), // Indikator loading notifikasi
+                  ),
+                )
+              : bookProvider.isLoading && displayedBooks.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : displayedBooks.isEmpty && _searchController.text.isNotEmpty
               ? const Center(
@@ -214,7 +242,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
-                      // Tombol Tambah Buku Pertama hanya terlihat oleh admin
                       if (isAdmin)
                         ElevatedButton.icon(
                           onPressed: () {

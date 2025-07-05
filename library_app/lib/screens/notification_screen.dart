@@ -1,8 +1,9 @@
+// lib/screens/notification_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:library_app/providers/notification_provider.dart';
-import 'package:library_app/models/app_notification.dart';
+// import 'package:library_app/models/app_notification.dart'; // <--- Perhatikan ini!
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -52,7 +53,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         builder: (context, notificationProvider, child) {
           print('DEBUG: NotificationScreen Consumer rebuilding.');
           print(
-            'DEBUG: NotificationScreen - IsLoading: ${notificationProvider.isLoading}, Notifications count: ${notificationProvider.notifications.length}',
+              'DEBUG: NotificationScreen - IsLoading: ${notificationProvider.isLoading}, Notifications count: ${notificationProvider.notifications.length}',
           );
 
           if (notificationProvider.isLoading &&
@@ -62,7 +63,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           }
           if (notificationProvider.notifications.isEmpty) {
             print(
-              'DEBUG: NotificationScreen showing "Tidak ada notifikasi" message.',
+                'DEBUG: NotificationScreen showing "Tidak ada notifikasi" message.',
             );
             return const Center(
               child: Text(
@@ -73,7 +74,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           }
 
           print(
-            'DEBUG: NotificationScreen showing ListView with ${notificationProvider.notifications.length} items.',
+              'DEBUG: NotificationScreen showing ListView with ${notificationProvider.notifications.length} items.',
           );
           return ListView.builder(
             padding: const EdgeInsets.all(8.0),
@@ -109,8 +110,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
+                        // Pastikan DateFormat sudah di-import dari intl
+                        // Perhatikan 'dd MMM BCE, HH:mm'
+                        // Untuk format tanggal normal, gunakan 'dd MMM yyyy, HH:mm'
+                        // 'BCE' adalah untuk Before Common Era, mungkin bukan yang Anda inginkan.
                         DateFormat(
-                          'dd MMM BCE, HH:mm',
+                          'dd MMM yyyy, HH:mm', // <-- Ganti format ini jika Anda tidak ingin BCE
                         ).format(notification.timestamp),
                         style: TextStyle(color: Colors.grey[500], fontSize: 12),
                       ),
@@ -119,8 +124,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   onTap: () async {
                     if (!notification.isRead) {
                       await notificationProvider.markNotificationAsRead(
-                        notification.id,
-                        true,
+                        notification.id, // <--- HANYA SATU ARGUMEN INI
                       );
                     }
                   },

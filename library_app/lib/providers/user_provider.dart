@@ -1,6 +1,10 @@
+// lib/providers/user_provider.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:provider/provider.dart'; // Tidak diperlukan di UserProvider ini
+// import '../models/app_user.dart'; // Pastikan ini di-import
+// import 'notification_provider.dart'; // Tidak diperlukan di UserProvider ini
 
 class AppUser {
   String uid;
@@ -65,9 +69,12 @@ class UserProvider extends ChangeNotifier {
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
+  // --- TAMBAHKAN GETTER userId INI ---
+  String? get userId =>
+      _currentUser?.uid; // Tambahkan ini agar userId bisa diakses
+  // --- AKHIR TAMBAH ---
 
   UserProvider() {
-    // Dengarkan perubahan status autentikasi Firebase
     _firebaseAuth.authStateChanges().listen((auth.User? firebaseUser) async {
       _isLoading = true; // <--- Set isLoading true di awal listener
       notifyListeners(); // Beri tahu bahwa loading dimulai

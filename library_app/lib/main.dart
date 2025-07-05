@@ -1,19 +1,30 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:firebase_auth/firebase_auth.dart'
+    as auth; // Import ini sudah ada
 import 'package:library_app/firebase_options.dart';
 
-import 'package:library_app/screens/welcome_screen.dart';
-import 'package:library_app/screens/home_screen.dart';
+// Screens yang di-import
+import 'package:library_app/screens/welcome_screen.dart'; // Digunakan untuk non-authenticated users
+import 'package:library_app/screens/home_screen.dart'; // Digunakan untuk authenticated users
+// Import providers yang diperlukan
 import 'package:library_app/providers/book_provider.dart';
 import 'package:library_app/providers/user_provider.dart';
 import 'package:library_app/providers/notification_provider.dart';
+
+// Jika Anda punya Shared Preferences, uncomment baris ini dan inisialisasi di main()
+// import 'package:shared_preferences/shared_preferences.dart';
+// late SharedPreferences sharedPreferences; // Jika Anda menggunakan SharedPreferences secara global
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Jika Anda menggunakan SharedPreferences secara global, uncomment ini
+  // sharedPreferences = await SharedPreferences.getInstance();
 
   runApp(
     MultiProvider(
@@ -21,13 +32,15 @@ void main() async {
         ChangeNotifierProvider(create: (context) => BookProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
+        // Tambahkan provider lain di sini jika ada (sesuai yang Anda miliki di repositori GitHub Anda):
+        // ChangeNotifierProvider(create: (context) => CategoryProvider()),
+        // ChangeNotifierProvider(create: (context) => TransactionProvider()),
       ],
       child: const MyApp(),
     ),
   );
 }
 
-// >>> INI ADALAH PERUBAHAN KRUSIAL: UBAH MyApp MENJADI StatefulWidget <<<
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -36,23 +49,23 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Metode ini dipanggil setelah initState, dan setiap kali dependensi widget berubah.
-  // Ini adalah tempat yang AMAN untuk memanggil metode provider yang mungkin memicu notifyListeners().
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Dapatkan instance provider yang dibutuhkan.
-    // UserProvider harus listen: true karena kita butuh currentUser di sini.
-    final userProvider = Provider.of<UserProvider>(context);
-    // NotificationProvider tidak perlu listen: true di sini karena kita hanya memanggil methodnya,
-    // bukan membangun UI langsung dari state-nya di sini.
+    final userProvider = Provider.of<UserProvider>(
+      context,
+    ); // Listen: true (default) is fine here
     final notificationProvider = Provider.of<NotificationProvider>(
       context,
       listen: false,
     );
 
-    // Panggil setUserId di NotificationProvider ketika dependensi berubah (misal, status user berubah).
-    final String? userId = userProvider.currentUser?.uid;
+    final String? userId =
+        userProvider.userId; // Menggunakan getter userId dari UserProvider
+
+    // Panggil setUserId di NotificationProvider.
+    // Ini akan memicu NotificationProvider untuk mulai/menghentikan mendengarkan notifikasi
+    // sesuai dengan status autentikasi userId.
     notificationProvider.setUserId(userId);
 
     print(
@@ -62,66 +75,47 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Di metode build, kita mendapatkan provider lagi untuk digunakan dalam logika UI
-    // Kali ini, karena panggilan yang memicu notifyListeners() sudah ditangani di didChangeDependencies(),
-    // ini tidak akan menyebabkan error.
     final userProvider = Provider.of<UserProvider>(context);
-    final notificationProvider = Provider.of<NotificationProvider>(
-      context,
-    ); // Listen di sini agar UI MyApp me-rebuild
 
     print(
       'DEBUG: Main Build: UserProvider.isLoading: ${userProvider.isLoading}',
     );
     print(
-      'DEBUG: Main Build: NotificationProvider.isLoading: ${notificationProvider.isLoading}',
-    );
-    print(
-      'DEBUG: Main Build: Notifications count: ${notificationProvider.notifications.length}',
-    );
-    print(
-      'DEBUG: Main Build: Notifications isEmpty: ${notificationProvider.notifications.isEmpty}',
-    );
-    print(
-      'DEBUG: Main Build: Unread count: ${notificationProvider.unreadCount}',
-    );
-    print(
       'DEBUG: Main Build: isAuthenticated: ${userProvider.isAuthenticated}',
     );
 
-    if (userProvider.isLoading) {
-      print('DEBUG: Main Build: Showing blue userProvider loading.');
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-        ),
-      );
-    }
+    // PERBAIKAN KRUSIAL: Bungkus seluruh logika pemilihan screen dengan MaterialApp.
+    // MaterialApp menyediakan widget Directionality yang dibutuhkan oleh Scaffold.
+    return MaterialApp(
+      title: 'Perpustakaan Digital', // Judul aplikasi
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: Builder(
+        // Menggunakan Builder untuk mendapatkan BuildContext yang benar di dalam MaterialApp
+        builder: (context) {
+          if (userProvider.isLoading) {
+            print('DEBUG: Main Build: Showing blue userProvider loading.');
+            return const Scaffold(
+              // Scaffold ini sekarang aman di dalam MaterialApp
+              body: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+              ),
+            );
+          }
 
-    if (userProvider.isAuthenticated) {
-      print(
-        'DEBUG: Main Build: User is authenticated. Checking notification loading.',
-      );
-      if (notificationProvider.isLoading ||
-          notificationProvider.notifications.isEmpty) {
-        print(
-          'DEBUG: Main Build: Showing green notificationProvider loading OR empty.',
-        );
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-            ),
-          ),
-        );
-      }
-      print('DEBUG: Main Build: Showing HomeScreen.');
-      return const HomeScreen();
-    } else {
-      print('DEBUG: Main Build: Showing WelcomeScreen.');
-      return const WelcomeScreen();
-    }
+          if (userProvider.isAuthenticated) {
+            print('DEBUG: Main Build: Showing HomeScreen.');
+            return const HomeScreen(); // HomeScreen sekarang aman
+          } else {
+            print('DEBUG: Main Build: Showing WelcomeScreen.');
+            return const WelcomeScreen(); // WelcomeScreen sekarang aman
+          }
+        },
+      ),
+    );
   }
 }

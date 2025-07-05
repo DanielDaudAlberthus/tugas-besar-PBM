@@ -1,6 +1,8 @@
+// lib/screens/edit_profile_screen.dart
+// ... (imports lainnya)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:library_app/providers/user_provider.dart'; // Import UserProvider
+import 'package:library_app/providers/user_provider.dart'; // Pastikan ini di-import
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -10,35 +12,56 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  final _formKey = GlobalKey<FormState>(); // Tambahkan FormKey
+  // Tambahan untuk profile image URL jika ada
+  late TextEditingController _profileImageUrlController;
 
   @override
   void initState() {
     super.initState();
-    final currentUser = Provider.of<UserProvider>(
-      context,
-      listen: false,
-    ).currentUser;
-    _nameController = TextEditingController(text: currentUser?.name ?? '');
-    _emailController = TextEditingController(text: currentUser?.email ?? '');
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    _nameController = TextEditingController(
+      text: userProvider.currentUser?.name,
+    );
+    _emailController = TextEditingController(
+      text: userProvider.currentUser?.email,
+    );
+    _profileImageUrlController = TextEditingController(
+      text: userProvider.currentUser?.profileImageUrl,
+    );
   }
 
-  void _saveProfile() async {
-    // Tambahkan async
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _profileImageUrlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       try {
         await userProvider.updateProfile(
           name: _nameController.text,
           email: _emailController.text,
+          profileImageUrl: _profileImageUrlController.text, // Jika ada
         );
+
+        // --- TAMBAHKAN if (!context.mounted) return; DI SINI ---
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profil berhasil diperbarui!')),
         );
-        Navigator.pop(context);
+        Navigator.pop(context); // Kembali ke layar sebelumnya
       } catch (e) {
+        // --- TAMBAHKAN if (!context.mounted) return; DI SINI ---
+        if (!context.mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Gagal memperbarui profil: $e')));
@@ -47,105 +70,71 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(
       context,
-    ); // Untuk indikator loading
+    ); // Listen: true jika UI perlu update
+    // final currentUserId = userProvider.userId; // Contoh penggunaan, sudah benar sekarang
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profil'),
         backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
-      body: Center(
-        // Tambahkan Center untuk SingleChildScrollView
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            // Tambahkan Form
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                const Text(
-                  'Perbarui Informasi Profil Anda',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nama Lengkap',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    prefixIcon: const Icon(Icons.person),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    prefixIcon: const Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email tidak boleh kosong';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Format email tidak valid';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: userProvider.isLoading
-                        ? null
-                        : _saveProfile, // Non-aktifkan saat loading
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+      body: userProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Lengkap',
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Nama tidak boleh kosong';
+                        }
+                        return null;
+                      },
                     ),
-                    child: userProvider.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'SIMPAN PERUBAHAN',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
-                  ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email tidak boleh kosong';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Format email tidak valid';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Jika Anda memiliki field untuk Profile Image URL
+                    TextFormField(
+                      controller: _profileImageUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'URL Gambar Profil (Opsional)',
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: _saveProfile,
+                      child: const Text('Simpan Perubahan'),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

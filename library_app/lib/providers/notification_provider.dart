@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+// lib/providers/notification_provider.dart
+import 'package:flutter/material.dart'; // Diperlukan untuk WidgetsBinding
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:library_app/models/app_notification.dart';
 import 'dart:async'; // Import untuk StreamSubscription
@@ -27,14 +28,16 @@ class NotificationProvider with ChangeNotifier {
     // Jika User ID tidak berubah
     if (_currentUserId == userId) {
       // Jika user ID sama dan tidak null, tapi langganan tidak aktif, coba aktifkan kembali.
-      // Ini penting jika listener entah bagaimana terhenti tanpa perubahan user ID.
       if (userId != null && _notificationSubscription == null) {
         print(
           'DEBUG: setUserId: User ID sama, tapi langganan null. Mencoba memulai ulang listener.',
         );
         _listenToNotifications();
       }
-      notifyListeners(); // Tetap notify bahkan jika ID sama, untuk memastikan UI update jika ada perubahan status loading atau unreadCount (walau tak ada data baru)
+      // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners(); // Tetap notify bahkan jika ID sama, untuk memastikan UI update jika ada perubahan status loading atau unreadCount (walau tak ada data baru)
+      });
       return; // Tidak perlu melakukan apa-apa jika user ID sama dan langganan sudah aktif/diatur ulang
     }
 
@@ -49,7 +52,11 @@ class NotificationProvider with ChangeNotifier {
     _notifications = []; // Kosongkan notifikasi dari pengguna sebelumnya
     _isLoading =
         true; // Set loading true untuk menunjukkan fetching data user baru
-    notifyListeners(); // Beri tahu UI bahwa data notifikasi sedang di-reset dan di-load ulang
+
+    // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners(); // Beri tahu UI bahwa data notifikasi sedang di-reset dan di-load ulang
+    });
     print(
       'DEBUG: setUserId: User ID diperbarui menjadi $_currentUserId. Mengelola langganan. Data notifikasi direset.',
     );
@@ -61,7 +68,10 @@ class NotificationProvider with ChangeNotifier {
     } else {
       // Jika User ID null (logout), pastikan isLoading menjadi false karena tidak ada yang perlu di-load
       _isLoading = false;
-      notifyListeners(); // Notify listeners karena isLoading bisa berubah
+      // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners(); // Notify listeners karena isLoading bisa berubah
+      });
       print('DEBUG: setUserId: User logout, notifikasi dikosongkan.');
     }
   }
@@ -70,14 +80,20 @@ class NotificationProvider with ChangeNotifier {
   void _listenToNotifications() {
     _isLoading =
         true; // (Ini akan di-set false di bawah saat snapshot pertama tiba)
-    notifyListeners();
+    // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
 
     if (_currentUserId == null) {
       print(
         'DEBUG: _listenToNotifications: Tidak ada User ID saat mencoba mendengarkan. Kembali.',
       );
       _isLoading = false; // Pastikan loading false jika tidak ada user
-      notifyListeners();
+      // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
       return;
     }
 
@@ -114,7 +130,10 @@ class NotificationProvider with ChangeNotifier {
             }).toList();
 
             _isLoading = false; // Setelah menerima data, loading selesai
-            notifyListeners(); // Beri tahu UI untuk rebuild
+            // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              notifyListeners(); // Beri tahu UI untuk rebuild
+            });
             print(
               'DEBUG: notifyListeners() dipanggil di _listenToNotifications. Jumlah notifikasi belum dibaca: $unreadCount',
             );
@@ -122,7 +141,10 @@ class NotificationProvider with ChangeNotifier {
           onError: (error) {
             print('ERROR: Listener Firestore untuk notifikasi gagal: $error');
             _isLoading = false; // Set loading false jika ada error
-            notifyListeners();
+            // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              notifyListeners();
+            });
           },
           onDone: () {
             // Callback ini dipicu jika stream selesai (misalnya karena koneksi terputus dan tidak bisa di-recover)
@@ -170,17 +192,36 @@ class NotificationProvider with ChangeNotifier {
   }
 
   // Menandai notifikasi sebagai sudah dibaca (di Firestore)
-  Future<void> markNotificationAsRead(
-    String notificationId,
-    bool isRead,
-  ) async {
+  Future<void> markNotificationAsRead(String notificationId) async {
+    // Hapus argumen isRead, karena ini selalu untuk menandai isRead = true
     try {
-      await _firestore.collection('notifications').doc(notificationId).update({
-        'isRead': isRead,
-      });
-      print(
-        'DEBUG: markNotificationAsRead: Notifikasi $notificationId ditandai sudah dibaca: $isRead',
+      // Temukan notifikasi di daftar lokal
+      final index = _notifications.indexWhere(
+        (notif) => notif.id == notificationId,
       );
+      if (index != -1 && !_notifications[index].isRead) {
+        final userIdFromNotification =
+            _notifications[index].userId; // Ambil userId dari notifikasi
+        if (userIdFromNotification == null || userIdFromNotification.isEmpty) {
+          debugPrint(
+            'Error: Notification userId is null or empty in local list. Cannot mark as read.',
+          );
+          return;
+        }
+
+        await _firestore.collection('notifications').doc(notificationId).update(
+          {
+            'isRead': true, // Selalu set ke true
+          },
+        );
+        print(
+          'DEBUG: markNotificationAsRead: Notifikasi $notificationId ditandai sudah dibaca: true',
+        );
+      } else {
+        print(
+          'DEBUG: Notification $notificationId not found or already read locally.',
+        );
+      }
     } catch (e) {
       print(
         'ERROR: markNotificationAsRead: Gagal menandai notifikasi sudah dibaca: $e',
