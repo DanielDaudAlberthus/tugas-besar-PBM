@@ -2,21 +2,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart'
-    as auth; // Import ini sudah ada
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:library_app/firebase_options.dart';
 
 // Screens yang di-import
-import 'package:library_app/screens/welcome_screen.dart'; // Digunakan untuk non-authenticated users
-import 'package:library_app/screens/home_screen.dart'; // Digunakan untuk authenticated users
+import 'package:library_app/screens/welcome_screen.dart';
+import 'package:library_app/screens/home_screen.dart';
 // Import providers yang diperlukan
 import 'package:library_app/providers/book_provider.dart';
 import 'package:library_app/providers/user_provider.dart';
 import 'package:library_app/providers/notification_provider.dart';
+// Tambahkan imports untuk provider lain jika Anda memilikinya di MultiProvider
+import 'package:library_app/providers/loan_provider.dart'; // Tambahkan ini
+// import 'package:library_app/providers/category_provider.dart'; // Jika ada
+// import 'package:library_app/providers/transaction_provider.dart'; // Jika ada
 
-// Jika Anda punya Shared Preferences, uncomment baris ini dan inisialisasi di main()
+// Jika Anda punya Shared Preferences dan menggunakannya secara global
 // import 'package:shared_preferences/shared_preferences.dart';
-// late SharedPreferences sharedPreferences; // Jika Anda menggunakan SharedPreferences secara global
+// late SharedPreferences sharedPreferences;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +35,10 @@ void main() async {
         ChangeNotifierProvider(create: (context) => BookProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
-        // Tambahkan provider lain di sini jika ada (sesuai yang Anda miliki di repositori GitHub Anda):
+        ChangeNotifierProvider(
+          create: (context) => LoanProvider(),
+        ), // Pastikan ini ada
+        // Tambahkan provider lain di sini jika ada:
         // ChangeNotifierProvider(create: (context) => CategoryProvider()),
         // ChangeNotifierProvider(create: (context) => TransactionProvider()),
       ],
@@ -52,16 +58,13 @@ class _MyAppState extends State<MyApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final userProvider = Provider.of<UserProvider>(
-      context,
-    ); // Listen: true (default) is fine here
+    final userProvider = Provider.of<UserProvider>(context);
     final notificationProvider = Provider.of<NotificationProvider>(
       context,
       listen: false,
     );
 
-    final String? userId =
-        userProvider.userId; // Menggunakan getter userId dari UserProvider
+    final String? userId = userProvider.userId;
 
     // Panggil setUserId di NotificationProvider.
     // Ini akan memicu NotificationProvider untuk mulai/menghentikan mendengarkan notifikasi
@@ -87,7 +90,7 @@ class _MyAppState extends State<MyApp> {
     // PERBAIKAN KRUSIAL: Bungkus seluruh logika pemilihan screen dengan MaterialApp.
     // MaterialApp menyediakan widget Directionality yang dibutuhkan oleh Scaffold.
     return MaterialApp(
-      title: 'Perpustakaan Digital', // Judul aplikasi
+      title: 'Perpustakaan Digital',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,

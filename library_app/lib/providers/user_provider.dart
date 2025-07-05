@@ -69,14 +69,12 @@ class UserProvider extends ChangeNotifier {
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
-  // --- TAMBAHKAN GETTER userId INI ---
-  String? get userId =>
-      _currentUser?.uid; // Tambahkan ini agar userId bisa diakses
-  // --- AKHIR TAMBAH ---
+  // Perbaikan: Tambahkan getter userId di sini
+  String? get userId => _currentUser?.uid;
 
   UserProvider() {
     _firebaseAuth.authStateChanges().listen((auth.User? firebaseUser) async {
-      _isLoading = true; // <--- Set isLoading true di awal listener
+      _isLoading = true; // Set isLoading true di awal listener
       notifyListeners(); // Beri tahu bahwa loading dimulai
 
       if (firebaseUser != null) {
@@ -103,8 +101,7 @@ class UserProvider extends ChangeNotifier {
         _currentUser = null;
       }
 
-      _isLoading =
-          false; // <--- Set isLoading false setelah fetch/check selesai
+      _isLoading = false; // Set isLoading false setelah fetch/check selesai
       notifyListeners(); // Beri tahu bahwa loading selesai dan status berubah
     });
   }
@@ -255,4 +252,6 @@ class UserProvider extends ChangeNotifier {
   }
 }
 
+// GlobalKey<NavigatorState> ini tidak digunakan di code yang saya berikan,
+// jika Anda tidak menggunakannya di tempat lain, bisa dihapus.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

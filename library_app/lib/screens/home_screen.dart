@@ -1,5 +1,4 @@
 // lib/screens/home_screen.dart
-// IMPORTS ANDA SAMA PERSIS SEPERTI YANG ANDA BERIKAN
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:library_app/providers/book_provider.dart';
@@ -29,28 +28,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<BookProvider>(context, listen: false).fetchBooks();
-      // >>> HAPUS PEMANGGILAN _loadNotifications() DI SINI <<<
-      // _loadNotifications(); // BARIS INI TIDAK PERLU LAGI
     });
 
     _searchController.addListener(() {
       setState(() {});
     });
   }
-
-  // >>> HAPUS SELURUH FUNGSI _loadNotifications() INI <<<
-  // void _loadNotifications() async {
-  //   final userProvider = Provider.of<UserProvider>(context, listen: false);
-  //   final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
-  //   final String? currentUserId = userProvider.userId;
-  //   if (currentUserId != null && notificationProvider.notifications.isEmpty && !notificationProvider.isLoading) {
-  //     print('DEBUG: HomeScreen: Calling getNotifications from _loadNotifications for User ID: $currentUserId');
-  //     // await notificationProvider.getNotifications(currentUserId); // Metode ini tidak ada
-  //   } else {
-  //       print('DEBUG: HomeScreen: Not calling getNotifications. userId: $currentUserId, isEmpty: ${notificationProvider.notifications.isEmpty}, isLoading: ${notificationProvider.isLoading}');
-  //   }
-  // }
-  // >>> AKHIR HAPUS FUNGSI _loadNotifications() <<<
 
   void _onItemTapped(int index) {
     setState(() {
@@ -211,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           // Tambahkan CircularProgressIndicator jika notifikasi sedang dimuat
+          // Ini akan menampilkan loading notifikasi di HomeScreen jika dibutuhkan
           body:
               notificationProvider
                   .isLoading // Periksa isLoading NotificationProvider
@@ -368,6 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // Tombol ini hanya untuk tampilan, tidak lagi memanggil toggleBorrowStatus
                                   IconButton(
                                     icon: Icon(
                                       book.isBorrowed
@@ -377,35 +362,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ? Colors.green
                                           : Colors.grey,
                                     ),
-                                    onPressed: () async {
-                                      await bookProvider.toggleBorrowStatus(
-                                        book.id!,
-                                        !book.isBorrowed,
-                                      );
-                                      String statusMessage = book.isBorrowed
-                                          ? "dikembalikan"
-                                          : "dipinjam";
-                                      if (currentUserId != null) {
-                                        final notification = AppNotification(
-                                          id: '',
-                                          title: 'Status Buku Berubah!',
-                                          message:
-                                              'Buku "${book.title}" sekarang telah $statusMessage.',
-                                          timestamp: DateTime.now(),
-                                          type: 'book_status_change',
-                                          relatedItemId: book.id,
-                                          userId: currentUserId,
-                                        );
-                                        await notificationProvider
-                                            .addNotification(notification);
-                                      }
-                                      if (!context.mounted) return;
+                                    onPressed: () {
+                                      // Hapus logika onPressed yang memanggil toggleBorrowStatus
+                                      // Karena sekarang penanganan peminjaman/pengembalian ada di BookDetailScreen
+                                      // Anda bisa menambahkan SnackBar di sini bahwa fungsi ini ada di detail buku
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        SnackBar(
+                                        const SnackBar(
                                           content: Text(
-                                            'Buku "${book.title}" telah $statusMessage.',
+                                            'Status peminjaman diubah di halaman detail buku.',
                                           ),
                                         ),
                                       );
@@ -450,6 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           await bookProvider.deleteBook(
                                             book.id!,
                                           );
+                                          if (!context.mounted) return;
                                           if (currentUserId != null) {
                                             final notification = AppNotification(
                                               id: '',
@@ -458,10 +425,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   'Buku "${book.title}" telah dihapus dari perpustakaan.',
                                               timestamp: DateTime.now(),
                                               type: 'book_deleted',
-                                              userId: currentUserId,
+                                              userId:
+                                                  currentUserId, // <<< INI YANG PENTING
                                             );
-                                            await notificationProvider
-                                                .addNotification(notification);
+                                            final notifProvider =
+                                                Provider.of<
+                                                  NotificationProvider
+                                                >(context, listen: false);
+                                            await notifProvider.addNotification(
+                                              notification,
+                                            );
                                           }
                                           if (!context.mounted) return;
                                           ScaffoldMessenger.of(

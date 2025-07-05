@@ -1,3 +1,4 @@
+// lib/models/app_notification.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppNotification {
@@ -11,14 +12,14 @@ class AppNotification {
   final String userId; // ID pengguna yang relevan dengan notifikasi ini
 
   AppNotification({
-    required this.id,
+    required this.id, // Pastikan ini required
     required this.title,
     required this.message,
     required this.timestamp,
-    this.isRead = false,
+    this.isRead = false, // Default false
     this.type,
     this.relatedItemId,
-    required this.userId,
+    required this.userId, // Pastikan ini required
   });
 
   // Factory constructor untuk membuat objek AppNotification dari DocumentSnapshot Firestore
@@ -32,7 +33,7 @@ class AppNotification {
       isRead: data['isRead'] ?? false,
       type: data['type'],
       relatedItemId: data['relatedItemId'],
-      userId: data['userId'] ?? '',
+      userId: data['userId'] ?? '', // Pastikan userId dibaca
     );
   }
 
@@ -45,7 +46,7 @@ class AppNotification {
       'isRead': isRead,
       'type': type,
       'relatedItemId': relatedItemId,
-      'userId': userId,
+      'userId': userId, // Pastikan userId disimpan
     };
   }
 

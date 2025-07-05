@@ -19,8 +19,8 @@ class NotificationProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   NotificationProvider() {
-    // Konstruktor tidak lagi memanggil _listenToNotifications() secara langsung.
-    // Ini akan dikelola sepenuhnya oleh setUserId.
+    // Konstruktor tidak memanggil _listenToNotifications() secara langsung.
+    // Ini akan dikelola sepenuhnya oleh setUserId dari MyApp.
   }
 
   // Metode untuk mengatur ID pengguna saat ini dan mengelola listener
@@ -34,8 +34,9 @@ class NotificationProvider with ChangeNotifier {
         );
         _listenToNotifications();
       }
-      // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+      // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!hasListeners) return; // Tambahkan check ini
         notifyListeners(); // Tetap notify bahkan jika ID sama, untuk memastikan UI update jika ada perubahan status loading atau unreadCount (walau tak ada data baru)
       });
       return; // Tidak perlu melakukan apa-apa jika user ID sama dan langganan sudah aktif/diatur ulang
@@ -53,8 +54,9 @@ class NotificationProvider with ChangeNotifier {
     _isLoading =
         true; // Set loading true untuk menunjukkan fetching data user baru
 
-    // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+    // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!hasListeners) return; // Tambahkan check ini
       notifyListeners(); // Beri tahu UI bahwa data notifikasi sedang di-reset dan di-load ulang
     });
     print(
@@ -68,8 +70,9 @@ class NotificationProvider with ChangeNotifier {
     } else {
       // Jika User ID null (logout), pastikan isLoading menjadi false karena tidak ada yang perlu di-load
       _isLoading = false;
-      // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+      // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!hasListeners) return; // Tambahkan check ini
         notifyListeners(); // Notify listeners karena isLoading bisa berubah
       });
       print('DEBUG: setUserId: User logout, notifikasi dikosongkan.');
@@ -80,8 +83,9 @@ class NotificationProvider with ChangeNotifier {
   void _listenToNotifications() {
     _isLoading =
         true; // (Ini akan di-set false di bawah saat snapshot pertama tiba)
-    // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+    // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!hasListeners) return; // Tambahkan check ini
       notifyListeners();
     });
 
@@ -90,8 +94,9 @@ class NotificationProvider with ChangeNotifier {
         'DEBUG: _listenToNotifications: Tidak ada User ID saat mencoba mendengarkan. Kembali.',
       );
       _isLoading = false; // Pastikan loading false jika tidak ada user
-      // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+      // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!hasListeners) return; // Tambahkan check ini
         notifyListeners();
       });
       return;
@@ -130,8 +135,9 @@ class NotificationProvider with ChangeNotifier {
             }).toList();
 
             _isLoading = false; // Setelah menerima data, loading selesai
-            // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+            // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
             WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!hasListeners) return; // Tambahkan check ini
               notifyListeners(); // Beri tahu UI untuk rebuild
             });
             print(
@@ -141,8 +147,9 @@ class NotificationProvider with ChangeNotifier {
           onError: (error) {
             print('ERROR: Listener Firestore untuk notifikasi gagal: $error');
             _isLoading = false; // Set loading false jika ada error
-            // PERBAIKAN: Bungkus notifyListeners() dengan addPostFrameCallback
+            // PENTING: Bungkus notifyListeners() dengan addPostFrameCallback
             WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!hasListeners) return; // Tambahkan check ini
               notifyListeners();
             });
           },
@@ -168,17 +175,23 @@ class NotificationProvider with ChangeNotifier {
 
   // Menambahkan notifikasi baru ke Firestore
   Future<void> addNotification(AppNotification notification) async {
-    // Pastikan notifikasi memiliki userId yang benar
-    if (notification.userId.isEmpty && _currentUserId != null) {
-      // Create a new notification object with the currentUserId, as the original one might have an empty userId.
-      notification = notification.copyWith(userId: _currentUserId);
-    }
     // Debug print sebelum menambahkan ke Firestore
     print(
       'DEBUG: addNotification: Mencoba menambahkan notifikasi dengan userId: ${notification.userId}, title: ${notification.title}',
     );
 
     try {
+      // PERBAIKAN PENTING: Pastikan userId notifikasi cocok dengan userId provider
+      // Ini krusial untuk aturan keamanan Firestore.
+      if (_currentUserId == null || notification.userId != _currentUserId) {
+        print(
+          'WARNING: addNotification: userId notifikasi (${notification.userId}) tidak cocok dengan _currentUserId provider (${_currentUserId}). Menolak penambahan notifikasi untuk mencegah error izin.',
+        );
+        throw Exception(
+          'Notification userId does not match current user ID or current user is null. Cannot add notification.',
+        );
+      }
+
       await _firestore.collection('notifications').add(notification.toMap());
       print(
         'DEBUG: addNotification: Notifikasi berhasil ditambahkan ke Firestore.',
@@ -193,18 +206,17 @@ class NotificationProvider with ChangeNotifier {
 
   // Menandai notifikasi sebagai sudah dibaca (di Firestore)
   Future<void> markNotificationAsRead(String notificationId) async {
-    // Hapus argumen isRead, karena ini selalu untuk menandai isRead = true
     try {
-      // Temukan notifikasi di daftar lokal
       final index = _notifications.indexWhere(
         (notif) => notif.id == notificationId,
       );
       if (index != -1 && !_notifications[index].isRead) {
-        final userIdFromNotification =
-            _notifications[index].userId; // Ambil userId dari notifikasi
-        if (userIdFromNotification == null || userIdFromNotification.isEmpty) {
-          debugPrint(
-            'Error: Notification userId is null or empty in local list. Cannot mark as read.',
+        final userIdFromNotification = _notifications[index].userId;
+        // Pastikan userId dari notifikasi cocok dengan currentUserId provider
+        if (_currentUserId == null ||
+            userIdFromNotification != _currentUserId) {
+          print(
+            'WARNING: markNotificationAsRead: userId notifikasi (${userIdFromNotification}) tidak cocok dengan _currentUserId provider (${_currentUserId}). Menolak mark as read.',
           );
           return;
         }
@@ -234,6 +246,13 @@ class NotificationProvider with ChangeNotifier {
   Future<void> markAllNotificationsAsRead() async {
     WriteBatch batch = _firestore.batch();
     for (var notification in _notifications.where((n) => !n.isRead)) {
+      // Tambahkan check userId juga saat markAllNotificationsAsRead
+      if (_currentUserId == null || notification.userId != _currentUserId) {
+        print(
+          'WARNING: Skipping notification ${notification.id} for markAllNotificationsAsRead as userId does not match current user or current user is null.',
+        );
+        continue;
+      }
       batch.update(
         _firestore.collection('notifications').doc(notification.id),
         {'isRead': true},

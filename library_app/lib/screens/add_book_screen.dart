@@ -1,3 +1,4 @@
+// lib/screens/add_book_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -152,7 +153,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
         listen: false,
       );
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final currentUserId = userProvider.currentUser?.uid;
+      final currentUserId = userProvider.userId; // Ambil userId dari provider
 
       if (currentUserId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -176,21 +177,22 @@ class _AddBookScreenState extends State<AddBookScreen> {
         imageUrl: imageUrl,
         description: _descriptionController.text,
         isBorrowed: false,
-        category: _selectedCategory!,
+        categoryId: _selectedCategory!, // Menggunakan categoryId
       );
 
       try {
         await bookProvider.addBook(newBook);
 
+        // Pastikan userId: currentUserId, ADA DI SINI
         final notification = AppNotification(
-          id: '',
+          id: '', // ID akan diisi Firestore setelah disimpan
           title: 'Buku Baru Ditambahkan!',
           message:
-              'Buku "${newBook.title}" (${newBook.category}) oleh ${newBook.author} sekarang tersedia di perpustakaan.',
+              'Buku "${newBook.title}" (${newBook.categoryId}) oleh ${newBook.author} sekarang tersedia di perpustakaan.', // Menggunakan categoryId
           timestamp: DateTime.now(),
           type: 'new_book',
-          relatedItemId: newBook.id,
-          userId: currentUserId,
+          relatedItemId: newBook.id, // ID buku yang baru ditambahkan
+          userId: currentUserId, // <<< INI YANG PENTING: Melewatkan userId
         );
         await notificationProvider.addNotification(notification);
 
