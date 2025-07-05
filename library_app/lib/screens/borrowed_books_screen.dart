@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:library_app/providers/book_provider.dart';
 import 'package:library_app/models/book.dart';
+import 'package:library_app/providers/notification_provider.dart';
+import 'package:library_app/models/app_notification.dart';
+import 'package:library_app/providers/user_provider.dart';
 
 class BorrowedBooksScreen extends StatelessWidget {
   const BorrowedBooksScreen({super.key});
@@ -16,6 +19,16 @@ class BorrowedBooksScreen extends StatelessWidget {
       ),
       body: Consumer<BookProvider>(
         builder: (context, bookProvider, child) {
+          final notificationProvider = Provider.of<NotificationProvider>(
+            context,
+            listen: false,
+          );
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final currentUserId = userProvider.currentUser?.uid;
+
           final borrowedBooks = bookProvider.borrowedBooks;
 
           if (bookProvider.isLoading && borrowedBooks.isEmpty) {
@@ -102,7 +115,7 @@ class BorrowedBooksScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Status: ${book.isBorrowed ? 'Dipinjam' : 'Tersedia'}', // Perbaiki ini juga
+                              'Status: ${book.isBorrowed ? 'Dipinjam' : 'Tersedia'}',
                               style: TextStyle(
                                 color: book.isBorrowed
                                     ? Colors.red[700]
@@ -112,14 +125,6 @@ class BorrowedBooksScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 5),
-                            // Tanggal peminjaman dan pengembalian bisa ditambahkan di sini
-                            // Perhatikan bahwa model Book saat ini tidak punya field ini,
-                            // Anda perlu menambahkannya jika ingin menampilkan data ini dari Firestore
-                            // if (book.borrowedDate != null)
-                            //   Text(
-                            //     'Dipinjam: ${DateFormat('dd MMM yyyy').format(book.borrowedDate!)}',
-                            //     style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                            //   ),
                           ],
                         ),
                       ),
@@ -128,14 +133,29 @@ class BorrowedBooksScreen extends StatelessWidget {
                           await bookProvider.toggleBorrowStatus(
                             book.id!,
                             false,
-                          ); // Set isBorrowed ke false
-                          // --- PERBAIKAN DI SINI ---
-                          if (!context.mounted) return; // <--- TAMBAHKAN INI
-                          // -----------------------
+                          );
+
+                          if (currentUserId != null) {
+                            final notification = AppNotification(
+                              id: '',
+                              title: 'Buku Dikembalikan!',
+                              message:
+                                  'Anda telah mengembalikan buku "${book.title}".',
+                              timestamp: DateTime.now(),
+                              type: 'book_returned',
+                              relatedItemId: book.id,
+                              userId: currentUserId,
+                            );
+                            await notificationProvider.addNotification(
+                              notification,
+                            );
+                          }
+
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Buku "${book.title}" berhasil dikembalikan.',
+                                'Anda berhasil mengembalikan "${book.title}"!',
                               ),
                             ),
                           );

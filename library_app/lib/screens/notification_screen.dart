@@ -15,12 +15,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotificationProvider>(
-        context,
-        listen: false,
-      ).markAllNotificationsAsRead();
-    });
+    // Non-aktifkan ini sementara untuk debugging real-time
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Provider.of<NotificationProvider>(context, listen: false)
+    //       .markAllNotificationsAsRead();
+    // });
   }
 
   @override
@@ -37,9 +36,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 context,
                 listen: false,
               ).markAllNotificationsAsRead();
-              print(
-                'DEBUG: NotificationScreen - Mark All as Read pressed.',
-              ); // ADDED PRINT
+              print('DEBUG: NotificationScreen - Mark All as Read pressed.');
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -53,24 +50,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
       body: Consumer<NotificationProvider>(
         builder: (context, notificationProvider, child) {
-          print(
-            'DEBUG: NotificationScreen Consumer rebuilding.',
-          ); // ADDED PRINT
+          print('DEBUG: NotificationScreen Consumer rebuilding.');
           print(
             'DEBUG: NotificationScreen - IsLoading: ${notificationProvider.isLoading}, Notifications count: ${notificationProvider.notifications.length}',
-          ); // ADDED PRINT
+          );
 
           if (notificationProvider.isLoading &&
               notificationProvider.notifications.isEmpty) {
-            print(
-              'DEBUG: NotificationScreen showing loading indicator.',
-            ); // ADDED PRINT
+            print('DEBUG: NotificationScreen showing loading indicator.');
             return const Center(child: CircularProgressIndicator());
           }
           if (notificationProvider.notifications.isEmpty) {
             print(
               'DEBUG: NotificationScreen showing "Tidak ada notifikasi" message.',
-            ); // ADDED PRINT
+            );
             return const Center(
               child: Text(
                 'Tidak ada notifikasi.',
@@ -81,7 +74,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
           print(
             'DEBUG: NotificationScreen showing ListView with ${notificationProvider.notifications.length} items.',
-          ); // ADDED PRINT
+          );
           return ListView.builder(
             padding: const EdgeInsets.all(8.0),
             itemCount: notificationProvider.notifications.length,

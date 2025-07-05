@@ -7,9 +7,9 @@ import 'dart:convert';
 
 import 'package:library_app/providers/book_provider.dart';
 import 'package:library_app/models/book.dart';
-import 'package:library_app/providers/notification_provider.dart'; // Import NotificationProvider
-import 'package:library_app/models/app_notification.dart'; // Import AppNotification
-import 'package:library_app/providers/user_provider.dart'; // Import UserProvider
+import 'package:library_app/providers/notification_provider.dart';
+import 'package:library_app/models/app_notification.dart';
+import 'package:library_app/providers/user_provider.dart';
 
 class AddBookScreen extends StatefulWidget {
   const AddBookScreen({super.key});
@@ -25,11 +25,24 @@ class _AddBookScreenState extends State<AddBookScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   File? _selectedImage;
   bool _isUploadingImage = false;
+  String? _selectedCategory;
 
-  final String _cloudinaryCloudName =
-      'df98xswpr'; // Ganti dengan Cloud Name Anda
-  final String _cloudinaryUploadPreset =
-      'my_flutter_app_preset'; // Ganti dengan nama Upload Preset Anda (yang Unsigned)
+  final List<String> _categories = [
+    'Fiksi',
+    'Non-Fiksi',
+    'Sejarah',
+    'Sains',
+    'Biografi',
+    'Fantasi',
+    'Horor',
+    'Romansa',
+    'Komik',
+    'Anak-anak',
+    'Umum',
+  ];
+
+  final String _cloudinaryCloudName = 'df98xswpr';
+  final String _cloudinaryUploadPreset = 'my_flutter_app_preset';
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -126,6 +139,12 @@ class _AddBookScreenState extends State<AddBookScreen> {
         );
         return;
       }
+      if (_selectedCategory == null || _selectedCategory!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mohon pilih kategori buku.')),
+        );
+        return;
+      }
 
       final bookProvider = Provider.of<BookProvider>(context, listen: false);
       final notificationProvider = Provider.of<NotificationProvider>(
@@ -133,11 +152,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
         listen: false,
       );
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final currentUserId =
-          userProvider.currentUser?.uid; // Dapatkan UID user yang login
+      final currentUserId = userProvider.currentUser?.uid;
 
       if (currentUserId == null) {
-        // Handle case where user is somehow not logged in (should not happen with current app flow)
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Anda harus login untuk menambahkan buku.'),
@@ -145,9 +162,6 @@ class _AddBookScreenState extends State<AddBookScreen> {
         );
         return;
       }
-      print(
-        'DEBUG: Adding notification with User ID: $currentUserId',
-      ); // <-- TAMBAHKAN BARIS INI
 
       String? imageUrl;
 
@@ -162,24 +176,23 @@ class _AddBookScreenState extends State<AddBookScreen> {
         imageUrl: imageUrl,
         description: _descriptionController.text,
         isBorrowed: false,
+        category: _selectedCategory!,
       );
 
       try {
         await bookProvider.addBook(newBook);
 
-        // --- Perbarui logika notifikasi di sini ---
         final notification = AppNotification(
           id: '',
           title: 'Buku Baru Ditambahkan!',
           message:
-              'Buku "${newBook.title}" oleh ${newBook.author} sekarang tersedia di perpustakaan.',
+              'Buku "${newBook.title}" (${newBook.category}) oleh ${newBook.author} sekarang tersedia di perpustakaan.',
           timestamp: DateTime.now(),
           type: 'new_book',
           relatedItemId: newBook.id,
-          userId: currentUserId, // KIRIM USERID
+          userId: currentUserId,
         );
         await notificationProvider.addNotification(notification);
-        // --- Akhir logika notifikasi ---
 
         if (!mounted) return;
 
@@ -267,6 +280,32 @@ class _AddBookScreenState extends State<AddBookScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Penulis tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Kategori',
+                  border: OutlineInputBorder(),
+                ),
+                value: _selectedCategory,
+                hint: const Text('Pilih Kategori'),
+                items: _categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedCategory = newValue;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Kategori tidak boleh kosong';
                   }
                   return null;
                 },

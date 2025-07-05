@@ -63,13 +63,23 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<BookProvider>(
-      // Consumer untuk BookProvider
       builder: (context, bookProvider, child) {
         final notificationProvider = Provider.of<NotificationProvider>(
           context,
-        ); // Tidak perlu listen: false di sini jika pakai Consumer di badge
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        ); // Listen to notificationProvider for badge updates
+        final userProvider = Provider.of<UserProvider>(
+          context,
+        ); // Ambil UserProvider tanpa listen: false untuk mendapatkan role terbaru
         final currentUserId = userProvider.currentUser?.uid;
+        final currentUserRole =
+            userProvider.currentUser?.role; // <--- Ambil role secara eksplisit
+        final isAdmin = currentUserRole == 'admin'; // <--- Gunakan variabel ini
+
+        // --- TAMBAHKAN PRINT DEBUG INI ---
+        print('DEBUG: HomeScreen: User ID: $currentUserId');
+        print('DEBUG: HomeScreen: User Role from Provider: $currentUserRole');
+        print('DEBUG: HomeScreen: Is Admin (calculated): $isAdmin');
+        // --- AKHIR PRINT DEBUG ---
 
         final List<Book> displayedBooks = _searchController.text.isEmpty
             ? bookProvider.books
@@ -79,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            toolbarHeight: 130,
+            toolbarHeight: 130, // Tetap tinggi agar search bar muat
             flexibleSpace: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -115,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (context, notificationProvider, child) {
                             print(
                               'DEBUG: HomeScreen Consumer rebuilding for NotificationProvider. Unread count: ${notificationProvider.unreadCount}',
-                            ); // ADDED PRINT
+                            );
                             return Stack(
                               children: [
                                 IconButton(
@@ -204,18 +214,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AddBookScreen(),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Tambah Buku Pertama'),
-                      ),
+                      // Tombol Tambah Buku Pertama hanya terlihat oleh admin
+                      if (isAdmin)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AddBookScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('Tambah Buku Pertama'),
+                        ),
                     ],
                   ),
                 )
@@ -372,66 +384,71 @@ class _HomeScreenState extends State<HomeScreen> {
                                       );
                                     },
                                   ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: () async {
-                                      bool confirmDelete =
-                                          await showDialog(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: const Text('Hapus Buku'),
-                                              content: Text(
-                                                'Apakah Anda yakin ingin menghapus buku "${book.title}"?',
+                                  if (isAdmin) // HANYA UNTUK ADMIN
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () async {
+                                        bool confirmDelete =
+                                            await showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: const Text('Hapus Buku'),
+                                                content: Text(
+                                                  'Apakah Anda yakin ingin menghapus buku "${book.title}"?',
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(false),
+                                                    child: const Text('Batal'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(true),
+                                                    child: const Text('Hapus'),
+                                                  ),
+                                                ],
                                               ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(false),
-                                                  child: const Text('Batal'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).pop(true),
-                                                  child: const Text('Hapus'),
-                                                ),
-                                              ],
-                                            ),
-                                          ) ??
-                                          false;
+                                            ) ??
+                                            false;
 
-                                      if (confirmDelete) {
-                                        await bookProvider.deleteBook(book.id!);
-                                        if (currentUserId != null) {
-                                          final notification = AppNotification(
-                                            id: '',
-                                            title: 'Buku Dihapus!',
-                                            message:
-                                                'Buku "${book.title}" telah dihapus dari perpustakaan.',
-                                            timestamp: DateTime.now(),
-                                            type: 'book_deleted',
-                                            userId: currentUserId,
+                                        if (confirmDelete) {
+                                          await bookProvider.deleteBook(
+                                            book.id!,
                                           );
-                                          await notificationProvider
-                                              .addNotification(notification);
-                                        }
-                                        if (!context.mounted) return;
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Buku "${book.title}" dihapus.',
+                                          if (currentUserId != null) {
+                                            final notification = AppNotification(
+                                              id: '',
+                                              title: 'Buku Dihapus!',
+                                              message:
+                                                  'Buku "${book.title}" telah dihapus dari perpustakaan.',
+                                              timestamp: DateTime.now(),
+                                              type: 'book_deleted',
+                                              userId: currentUserId,
+                                            );
+                                            await notificationProvider
+                                                .addNotification(notification);
+                                          }
+                                          if (!context.mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Buku "${book.title}" dihapus.',
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
+                                          );
+                                        }
+                                      },
+                                    ),
                                 ],
                               ),
                             ],
@@ -441,6 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+          // BottomNavigationBar untuk navigasi antar halaman
           bottomNavigationBar: BottomNavigationBar(
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
@@ -454,16 +472,21 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedItemColor: Colors.blue,
             onTap: _onItemTapped,
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddBookScreen()),
-              );
-            },
-            backgroundColor: Colors.blue,
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
+          // FloatingActionButton hanya terlihat oleh admin
+          floatingActionButton: isAdmin
+              ? FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddBookScreen(),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.blue,
+                  child: const Icon(Icons.add, color: Colors.white),
+                )
+              : null,
         );
       },
     );

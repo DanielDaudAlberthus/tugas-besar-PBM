@@ -27,50 +27,101 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+// >>> INI ADALAH PERUBAHAN KRUSIAL: UBAH MyApp MENJADI StatefulWidget <<<
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final auth.FirebaseAuth firebaseAuth = auth.FirebaseAuth.instance;
+  State<MyApp> createState() => _MyAppState();
+}
 
-    return MaterialApp(
-      title: 'Library App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      navigatorKey: navigatorKey,
-      home: StreamBuilder<auth.User?>(
-        stream: firebaseAuth.authStateChanges(),
-        builder: (context, snapshot) {
-          final notificationProvider = Provider.of<NotificationProvider>(
-            context,
-            listen: false,
-          );
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final String? userId = snapshot.hasData ? snapshot.data!.uid : null;
-
-          // --- PERBAIKAN DI SINI: Tunda panggilan setUserId ---
-          // Ini memastikan panggilan setUserId (yang memicu notifyListeners)
-          // terjadi SETELAH StreamBuilder selesai membangun widget-nya,
-          // sehingga tidak ada konflik selama build phase.
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            notificationProvider.setUserId(userId);
-          });
-          // --- AKHIR PERBAIKAN ---
-
-          if (snapshot.hasData) {
-            return const HomeScreen();
-          } else {
-            return const WelcomeScreen();
-          }
-        },
-      ),
+class _MyAppState extends State<MyApp> {
+  // Metode ini dipanggil setelah initState, dan setiap kali dependensi widget berubah.
+  // Ini adalah tempat yang AMAN untuk memanggil metode provider yang mungkin memicu notifyListeners().
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Dapatkan instance provider yang dibutuhkan.
+    // UserProvider harus listen: true karena kita butuh currentUser di sini.
+    final userProvider = Provider.of<UserProvider>(context);
+    // NotificationProvider tidak perlu listen: true di sini karena kita hanya memanggil methodnya,
+    // bukan membangun UI langsung dari state-nya di sini.
+    final notificationProvider = Provider.of<NotificationProvider>(
+      context,
+      listen: false,
     );
+
+    // Panggil setUserId di NotificationProvider ketika dependensi berubah (misal, status user berubah).
+    final String? userId = userProvider.currentUser?.uid;
+    notificationProvider.setUserId(userId);
+
+    print(
+      'DEBUG: didChangeDependencies called in MyApp. User ID for notif provider: $userId',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Di metode build, kita mendapatkan provider lagi untuk digunakan dalam logika UI
+    // Kali ini, karena panggilan yang memicu notifyListeners() sudah ditangani di didChangeDependencies(),
+    // ini tidak akan menyebabkan error.
+    final userProvider = Provider.of<UserProvider>(context);
+    final notificationProvider = Provider.of<NotificationProvider>(
+      context,
+    ); // Listen di sini agar UI MyApp me-rebuild
+
+    print(
+      'DEBUG: Main Build: UserProvider.isLoading: ${userProvider.isLoading}',
+    );
+    print(
+      'DEBUG: Main Build: NotificationProvider.isLoading: ${notificationProvider.isLoading}',
+    );
+    print(
+      'DEBUG: Main Build: Notifications count: ${notificationProvider.notifications.length}',
+    );
+    print(
+      'DEBUG: Main Build: Notifications isEmpty: ${notificationProvider.notifications.isEmpty}',
+    );
+    print(
+      'DEBUG: Main Build: Unread count: ${notificationProvider.unreadCount}',
+    );
+    print(
+      'DEBUG: Main Build: isAuthenticated: ${userProvider.isAuthenticated}',
+    );
+
+    if (userProvider.isLoading) {
+      print('DEBUG: Main Build: Showing blue userProvider loading.');
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+        ),
+      );
+    }
+
+    if (userProvider.isAuthenticated) {
+      print(
+        'DEBUG: Main Build: User is authenticated. Checking notification loading.',
+      );
+      if (notificationProvider.isLoading ||
+          notificationProvider.notifications.isEmpty) {
+        print(
+          'DEBUG: Main Build: Showing green notificationProvider loading OR empty.',
+        );
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+        );
+      }
+      print('DEBUG: Main Build: Showing HomeScreen.');
+      return const HomeScreen();
+    } else {
+      print('DEBUG: Main Build: Showing WelcomeScreen.');
+      return const WelcomeScreen();
+    }
   }
 }

@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppNotification {
-  final String id;
+  final String id; // ID dokumen Firestore
   final String title;
   final String message;
   final DateTime timestamp;
   bool isRead;
-  final String? type;
-  final String? relatedItemId;
-  final String userId; // <--- TAMBAHKAN INI
+  final String? type; // Opsional: 'new_book', 'book_status_change', dll.
+  final String? relatedItemId; // Opsional: ID buku yang terkait
+  final String userId; // ID pengguna yang relevan dengan notifikasi ini
 
   AppNotification({
     required this.id,
@@ -18,9 +18,10 @@ class AppNotification {
     this.isRead = false,
     this.type,
     this.relatedItemId,
-    required this.userId, // <--- TAMBAHKAN INI DI CONSTRUCTOR
+    required this.userId,
   });
 
+  // Factory constructor untuk membuat objek AppNotification dari DocumentSnapshot Firestore
   factory AppNotification.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return AppNotification(
@@ -31,10 +32,11 @@ class AppNotification {
       isRead: data['isRead'] ?? false,
       type: data['type'],
       relatedItemId: data['relatedItemId'],
-      userId: data['userId'] ?? '', // <--- PASTIKAN INI DIAMBIL DARI FIRESTORE
+      userId: data['userId'] ?? '',
     );
   }
 
+  // Mengonversi objek AppNotification menjadi Map untuk disimpan ke Firestore
   Map<String, dynamic> toMap() {
     return {
       'title': title,
@@ -43,10 +45,11 @@ class AppNotification {
       'isRead': isRead,
       'type': type,
       'relatedItemId': relatedItemId,
-      'userId': userId, // <--- PASTIKAN INI DISIMPAN KE FIRESTORE
+      'userId': userId,
     };
   }
 
+  // Metode untuk membuat salinan notifikasi dengan perubahan (misalnya, update userId)
   AppNotification copyWith({
     String? id,
     String? title,
@@ -55,7 +58,7 @@ class AppNotification {
     bool? isRead,
     String? type,
     String? relatedItemId,
-    String? userId, // <--- TAMBAHKAN INI
+    String? userId,
   }) {
     return AppNotification(
       id: id ?? this.id,
@@ -65,7 +68,7 @@ class AppNotification {
       isRead: isRead ?? this.isRead,
       type: type ?? this.type,
       relatedItemId: relatedItemId ?? this.relatedItemId,
-      userId: userId ?? this.userId, // <--- TAMBAHKAN INI
+      userId: userId ?? this.userId,
     );
   }
 }

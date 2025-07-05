@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:library_app/models/book.dart'; // <--- PERBAIKI IMPORT INI
+import 'package:library_app/models/book.dart';
 import 'package:library_app/providers/book_provider.dart';
+import 'package:library_app/providers/notification_provider.dart';
+import 'package:library_app/models/app_notification.dart';
+import 'package:library_app/providers/user_provider.dart';
 
 class BookDetailScreen extends StatelessWidget {
   final Book book;
@@ -10,16 +13,18 @@ class BookDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan Consumer untuk mendengarkan perubahan status buku secara real-time
-    // Ini memastikan UI di halaman detail buku juga diperbarui jika statusnya berubah
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
-        // Dapatkan buku terbaru dari provider menggunakan ID-nya
-        // Ini penting karena objek 'book' yang dilewatkan ke konstruktor
-        // mungkin bukan instance yang paling up-to-date di provider.
         final currentBook = bookProvider.books.firstWhere(
           (b) => b.id == book.id,
         );
+
+        final notificationProvider = Provider.of<NotificationProvider>(
+          context,
+          listen: false,
+        );
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final currentUserId = userProvider.currentUser?.uid;
 
         return Scaffold(
           appBar: AppBar(
@@ -71,6 +76,26 @@ class BookDetailScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
+                // Tampilkan Kategori
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    currentBook.category, // Tampilkan kategori
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -81,12 +106,12 @@ class BookDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Status: ${currentBook.isBorrowed ? 'Dipinjam' : 'Tersedia'}', // <--- SESUAIKAN LOGIKA STATUS
+                      'Status: ${currentBook.isBorrowed ? 'Dipinjam' : 'Tersedia'}',
                       style: TextStyle(
                         fontSize: 18,
                         color: currentBook.isBorrowed
                             ? Colors.red[700]
-                            : Colors.green[700], // <--- SESUAIKAN WARNA
+                            : Colors.green[700],
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -99,13 +124,27 @@ class BookDetailScreen extends StatelessWidget {
                     onPressed: currentBook.isBorrowed
                         ? null
                         : () async {
-                            // <--- SESUAIKAN KONDISI ONPRESS
-                            // Meminjam buku berarti set isBorrowed menjadi true
                             await bookProvider.toggleBorrowStatus(
                               currentBook.id!,
                               true,
-                            ); // <--- PERBAIKI METHOD DAN ARGUMEN
-                            // Pastikan widget masih mounted sebelum menggunakan context
+                            );
+
+                            if (currentUserId != null) {
+                              final notification = AppNotification(
+                                id: '',
+                                title: 'Buku Dipinjam!',
+                                message:
+                                    'Anda berhasil meminjam buku "${currentBook.title}".',
+                                timestamp: DateTime.now(),
+                                type: 'book_borrowed',
+                                relatedItemId: currentBook.id,
+                                userId: currentUserId,
+                              );
+                              await notificationProvider.addNotification(
+                                notification,
+                              );
+                            }
+
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -114,22 +153,18 @@ class BookDetailScreen extends StatelessWidget {
                                 ),
                               ),
                             );
-                            Navigator.pop(
-                              context,
-                            ); // Kembali ke halaman sebelumnya
+                            Navigator.pop(context);
                           },
                     icon: const Icon(Icons.bookmark_add),
                     label: Text(
-                      currentBook.isBorrowed
-                          ? 'TIDAK TERSEDIA'
-                          : 'PINJAM BUKU', // <--- SESUAIKAN TEKS TOMBOL
+                      currentBook.isBorrowed ? 'TIDAK TERSEDIA' : 'PINJAM BUKU',
                       style: const TextStyle(fontSize: 18, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       backgroundColor: currentBook.isBorrowed
                           ? Colors.grey
-                          : Colors.blue, // <--- SESUAIKAN WARNA TOMBOL
+                          : Colors.blue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -148,8 +183,7 @@ class BookDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  currentBook
-                      .description, // <--- Tampilkan deskripsi dari model
+                  currentBook.description,
                   style: const TextStyle(fontSize: 16, color: Colors.black54),
                   textAlign: TextAlign.justify,
                 ),

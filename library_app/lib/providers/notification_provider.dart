@@ -41,35 +41,42 @@ class NotificationProvider with ChangeNotifier {
     // User ID telah berubah (misalnya dari null ke ID, atau dari ID A ke ID B, atau ke null/logout)
     _currentUserId = userId; // Perbarui user ID internal
 
-    // Batalkan langganan lama jika ada dan set ke null secara eksplisit
+    // Batalkan langganan lama jika ada
     _notificationSubscription?.cancel();
-    _notificationSubscription = null;
+    _notificationSubscription = null; // Set ke null secara eksplisit
 
+    // --- PENTING: Bersihkan data dan set loading true *segera* setelah UID berubah ---
+    _notifications = []; // Kosongkan notifikasi dari pengguna sebelumnya
+    _isLoading =
+        true; // Set loading true untuk menunjukkan fetching data user baru
+    notifyListeners(); // Beri tahu UI bahwa data notifikasi sedang di-reset dan di-load ulang
     print(
-      'DEBUG: setUserId: User ID diperbarui menjadi $_currentUserId. Mengelola langganan.',
+      'DEBUG: setUserId: User ID diperbarui menjadi $_currentUserId. Mengelola langganan. Data notifikasi direset.',
     );
+    // --- AKHIR PERBAIKAN ---
 
     // Mulai langganan baru hanya jika ada User ID yang valid
     if (_currentUserId != null) {
       _listenToNotifications();
     } else {
-      // Jika User ID null (logout), kosongkan notifikasi dan beri tahu listener
-      _notifications = []; // Kosongkan notifikasi jika user logout
-      notifyListeners();
+      // Jika User ID null (logout), pastikan isLoading menjadi false karena tidak ada yang perlu di-load
+      _isLoading = false;
+      notifyListeners(); // Notify listeners karena isLoading bisa berubah
       print('DEBUG: setUserId: User logout, notifikasi dikosongkan.');
     }
   }
 
   // Metode untuk mendengarkan perubahan notifikasi dari Firestore
   void _listenToNotifications() {
-    _isLoading = true;
+    _isLoading =
+        true; // (Ini akan di-set false di bawah saat snapshot pertama tiba)
     notifyListeners();
 
     if (_currentUserId == null) {
       print(
         'DEBUG: _listenToNotifications: Tidak ada User ID saat mencoba mendengarkan. Kembali.',
       );
-      _isLoading = false;
+      _isLoading = false; // Pastikan loading false jika tidak ada user
       notifyListeners();
       return;
     }
@@ -106,7 +113,7 @@ class NotificationProvider with ChangeNotifier {
               return AppNotification.fromFirestore(doc);
             }).toList();
 
-            _isLoading = false;
+            _isLoading = false; // Setelah menerima data, loading selesai
             notifyListeners(); // Beri tahu UI untuk rebuild
             print(
               'DEBUG: notifyListeners() dipanggil di _listenToNotifications. Jumlah notifikasi belum dibaca: $unreadCount',
@@ -114,7 +121,7 @@ class NotificationProvider with ChangeNotifier {
           },
           onError: (error) {
             print('ERROR: Listener Firestore untuk notifikasi gagal: $error');
-            _isLoading = false;
+            _isLoading = false; // Set loading false jika ada error
             notifyListeners();
           },
           onDone: () {
@@ -131,9 +138,7 @@ class NotificationProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    print(
-      'DEBUG: NotificationProvider dispose dipanggil. Membatalkan langganan.',
-    );
+    print('DEBUG: NotificationProvider dibuang. Membatalkan langganan.');
     _notificationSubscription?.cancel(); // Batalkan langganan Firestore
     _notificationSubscription = null; // Hapus referensi
     super.dispose();

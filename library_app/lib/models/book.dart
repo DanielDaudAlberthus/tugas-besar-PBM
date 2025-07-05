@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import ini jika belum ada
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Book {
   final String? id; // ID opsional untuk dokumen Firestore
@@ -6,15 +6,17 @@ class Book {
   final String author;
   final String imageUrl;
   final String description;
-  bool isBorrowed; // Tidak final karena bisa berubah
+  bool isBorrowed;
+  final String category; // Field baru: Kategori buku
 
   Book({
-    this.id, // ID sekarang opsional
+    this.id,
     required this.title,
     required this.author,
     required this.imageUrl,
     required this.description,
     this.isBorrowed = false,
+    required this.category, // Parameter baru di constructor
   });
 
   // Factory constructor untuk membuat objek Book dari DocumentSnapshot Firestore
@@ -27,6 +29,8 @@ class Book {
       imageUrl: data['imageUrl'] ?? '',
       description: data['description'] ?? '',
       isBorrowed: data['isBorrowed'] ?? false,
+      category:
+          data['category'] ?? 'Umum', // Ambil kategori dari data Firestore
     );
   }
 
@@ -38,6 +42,7 @@ class Book {
       'imageUrl': imageUrl,
       'description': description,
       'isBorrowed': isBorrowed,
+      'category': category, // Simpan kategori ke Firestore
     };
   }
 }
