@@ -46,10 +46,10 @@ User bisa langsung melakukan peminjaman buku di perpusatakaan<br>
 # * Detail Buku
 User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan ketika user ingin meminjam maka user harus mengajukan jadwal peminjaman yang sudah ada di tampilan tersebut
 * SEBELUM DI PINJAM<br>
-![image](https://github.com/user-attachments/assets/3131a286-7f66-4fd9-94e4-23af0ff5972a)
+![image](https://github.com/user-attachments/assets/3131a286-7f66-4fd9-94e4-23af0ff5972a)<br>
 
-* KERIKA DI PINJAM
-![WhatsApp Image 2025-07-06 at 12 45 19_c2cd8c2a](https://github.com/user-attachments/assets/dec4d81d-8225-4062-aa3c-514452f7cdbc)
+* KERIKA DI PINJAM<br>
+![WhatsApp Image 2025-07-06 at 12 45 19_c2cd8c2a](https://github.com/user-attachments/assets/dec4d81d-8225-4062-aa3c-514452f7cdbc)<br>
 
 * KETIKA INGIN KEMBALIKAN
 ![WhatsApp Image 2025-07-06 at 13 04 34_45bce174](https://github.com/user-attachments/assets/3ce96d9e-fe1a-4f4d-8abb-23187fbbf71d)
