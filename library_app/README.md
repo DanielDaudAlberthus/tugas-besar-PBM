@@ -28,7 +28,7 @@ Beberapa alasan pemilihan topik ini antara lain:
 ## Tampilan Manajemen Perpustakaan User
 # * Welcome Screen
 Tampilan awal bagi pengguna yang belum memiliki akun dipersilahkan untuk melakukan pendaftaran terlebih dahulu
-![image](https://github.com/user-attachments/assets/e7e81600-9681-4ce1-83ea-57bc4267b440) 
+![WhatsApp Image 2025-07-06 at 12 43 20_22bbc0e4](https://github.com/user-attachments/assets/8123cb54-4b57-4fdd-b60b-c9a712188a0b)
 
 # * Register Screen/Daftar Akun Baru
 Gambar dibawah merupakan tampilan daftar akun perpustakaan bagi pengguna
@@ -48,7 +48,7 @@ User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan k
 * SEBELUM DI PINJAM<br>
 ![image](https://github.com/user-attachments/assets/3131a286-7f66-4fd9-94e4-23af0ff5972a)<br>
 
-* KERIKA DI PINJAM<br>
+* KEtIKA DI PINJAM<br>
 ![WhatsApp Image 2025-07-06 at 12 45 19_c2cd8c2a](https://github.com/user-attachments/assets/dec4d81d-8225-4062-aa3c-514452f7cdbc)<br>
 
 * KETIKA INGIN KEMBALIKAN<br>
@@ -65,8 +65,8 @@ User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan k
   ![WhatsApp Image 2025-07-06 at 12 45 51_f74fe4c2](https://github.com/user-attachments/assets/9b6b1334-1cd3-455b-a1b2-e26faab591ae)
 
 # * Notification Screen
-  Untuk notifikasi user bisa melihat bahwa peminjaman buku diperpustakaan sudah berhasil dan akan ada notifikasi ketika user sudah harus mengembalikan buku tersebut
-  ![image](https://github.com/user-attachments/assets/db93fec8-1601-43be-bcd3-5907c46b7484)
+  Untuk notifikasi user bisa melihat bahwa peminjaman buku diperpustakaan sudah berhasil dan akan ada notifikasi ketika user sudah harus mengembalikan buku tersebut<br>
+  ![image](https://github.com/user-attachments/assets/db93fec8-1601-43be-bcd3-5907c46b7484)<br>
 
 # * Edit Profile Screen
   User bisa melakukan edit profile pada tampilan Akun saya<br>
