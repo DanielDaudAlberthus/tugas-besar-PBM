@@ -15,7 +15,19 @@ Tujuan dari aplikasi manajemen perpustakaan ini adalah untuk membangun sistem be
 ## Alasan Memilih Topik Manajemen Perpustakaan
 Beberapa alasan pemilihan topik ini antara lain:
 * Masalah peminjaman dan pengelolaan buku secara manual masih banyak ditemui di sekolah atau perpustakaan kecil
-'Topik ini dekat dengan lingkungan kampus dan pendidikan'
-'Menjadi sarana belajar untuk menerapkan CRUD (Create, Read, Update, Delete) di aplikasi Flutter'
-'Dapat menggabungkan fitur Firebase, notifikasi, serta manajemen data (Provider/MVC)'
-'Solusi digitalisasi perpustakaan sederhana yang bermanfaat secara nyata'
+*Topik ini dekat dengan lingkungan kampus dan pendidikan
+*Menjadi sarana belajar untuk menerapkan CRUD (Create, Read, Update, Delete) di aplikasi Flutter
+*Dapat menggabungkan fitur Firebase, notifikasi, serta manajemen data (Provider/MVC)
+*Solusi digitalisasi perpustakaan sederhana yang bermanfaat secara nyata
+
+## Tampilan Aplikasi
+1. WelcomeScreen
+2. LoginScreen
+3. RegisterScreen
+4. HomeScreen
+5. AddBookScreen
+6. BookDetailScreen
+7. BorrowedBooksScreen
+8. NotificationScreen
+9. AccountScreen
+10. EditProfileScreen
