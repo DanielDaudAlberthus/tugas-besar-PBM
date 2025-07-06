@@ -25,14 +25,19 @@ Beberapa alasan pemilihan topik ini antara lain:
 - Menjadi solusi digitalisasi perpustakaan sederhana yang bermanfaat secara nyata.
 
 
-## Tampilan Aplikasi
-1. WelcomeScreen
-2. LoginScreen
-3. RegisterScreen
-4. HomeScreen
-5. AddBookScreen
-6. BookDetailScreen
-7. BorrowedBooksScreen
-8. NotificationScreen
-9. AccountScreen
-10. EditProfileScreen
+## Tampilan Aplikasi User
+1. WelcomeScreen (tampilan awal bagi pengguna yang belum memiliki akun dipersilahkan untuk melakukan pendaftaran terlebih dahulu)
+   ![image](https://github.com/user-attachments/assets/e7e81600-9681-4ce1-83ea-57bc4267b440)
+
+2. DRegisterScreen/Daftar Akun Baru (Gambar dibawah merupakan tampilan daftar akun perpustakaan bagi pengguna)
+   ![image](https://github.com/user-attachments/assets/ddd0ed7a-550b-4d33-b04c-e336c5598a91)
+3. Tampilan Beranda (Setelah user berhasil login tampilan awal yang akan user lihat seperti dibawah ini. User bisa langsung melakukan peminjaman buku di perpusatakaan)
+   ![image](https://github.com/user-attachments/assets/52929787-faf8-4177-b87e-b698571ae526)
+
+4. Detail Buku (User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan ketika user ingin meminjam maka user hasil mengajukan jadwal peminjaman yang sudah ada di tampilan tersebu)
+   ![image](https://github.com/user-attachments/assets/3131a286-7f66-4fd9-94e4-23af0ff5972a)
+
+8. BorrowedBooksScreen
+9. NotificationScreen
+10. AccountScreen
+11. EditProfileScreen
