@@ -39,7 +39,8 @@ Bagi user yang sudah memiliki akun bisa langsung login dan inilah tampilannya
 ![WhatsApp Image 2025-07-06 at 12 50 53_dd2de086](https://github.com/user-attachments/assets/bde93e95-e912-418c-87cb-9ede0103cf7a)
 
 * Tampilan Beranda
-Setelah user berhasil login tampilan awal yang akan user lihat seperti dibawah ini. User bisa langsung melakukan peminjaman buku di perpusatakaan
+Setelah user berhasil login tampilan awal yang akan user lihat seperti dibawah ini.
+User bisa langsung melakukan peminjaman buku di perpusatakaan
 ![image](https://github.com/user-attachments/assets/52929787-faf8-4177-b87e-b698571ae526)
 
 * Detail Buku
