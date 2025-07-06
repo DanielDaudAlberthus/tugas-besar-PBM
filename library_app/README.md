@@ -92,4 +92,4 @@ Aplikasi Manajemen Perpustakaan ini dibangun untuk memberikan kemudahan bagi pen
 
 Dari sisi teknis, proyek ini juga menjadi media pembelajaran dalam menerapkan berbagai konsep Flutter, seperti manajemen state, routing antar halaman, integrasi Firebase, serta penggunaan komponen UI interaktif.
 
-Dengan pengembangan yang berkelanjutan, aplikasi ini memiliki potensi untuk diimplementasikan secara nyata di lingkungan sekolah atau perpustakaan kecil sebagai solusi digitalisasi sederhana namun bermanfaat.**
+Dengan pengembangan yang berkelanjutan, aplikasi ini memiliki potensi untuk diimplementasikan secara nyata di lingkungan sekolah atau perpustakaan kecil sebagai solusi digitalisasi sederhana namun bermanfaat.
