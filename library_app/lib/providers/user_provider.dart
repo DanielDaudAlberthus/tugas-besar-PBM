@@ -2,9 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:provider/provider.dart'; // Tidak diperlukan di UserProvider ini
-// import '../models/app_user.dart'; // Pastikan ini di-import
-// import 'notification_provider.dart'; // Tidak diperlukan di UserProvider ini
 
 class AppUser {
   String uid;
@@ -184,9 +181,12 @@ class UserProvider extends ChangeNotifier {
         if (email != null && email != firebaseUser.email) {
           await firebaseUser.updateEmail(email);
         }
+        // >>> PERBAIKAN: Update photoURL di Firebase Auth juga <<<
         if (profileImageUrl != null &&
             profileImageUrl != firebaseUser.photoURL) {
-          // This will only update Firestore's profileImageUrl, not Firebase Auth's
+          await firebaseUser.updatePhotoURL(
+            profileImageUrl,
+          ); // AKTIFKAN/TAMBAHKAN BARIS INI
         }
 
         Map<String, dynamic> updateData = {};
@@ -252,6 +252,4 @@ class UserProvider extends ChangeNotifier {
   }
 }
 
-// GlobalKey<NavigatorState> ini tidak digunakan di code yang saya berikan,
-// jika Anda tidak menggunakannya di tempat lain, bisa dihapus.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
