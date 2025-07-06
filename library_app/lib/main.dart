@@ -4,30 +4,17 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:library_app/firebase_options.dart';
-
-// Screens yang di-import
 import 'package:library_app/screens/welcome_screen.dart';
 import 'package:library_app/screens/home_screen.dart';
-// Import providers yang diperlukan
 import 'package:library_app/providers/book_provider.dart';
 import 'package:library_app/providers/user_provider.dart';
 import 'package:library_app/providers/notification_provider.dart';
-// Tambahkan imports untuk provider lain jika Anda memilikinya di MultiProvider
-import 'package:library_app/providers/loan_provider.dart'; // Tambahkan ini
-// import 'package:library_app/providers/category_provider.dart'; // Jika ada
-// import 'package:library_app/providers/transaction_provider.dart'; // Jika ada
-
-// Jika Anda punya Shared Preferences dan menggunakannya secara global
-// import 'package:shared_preferences/shared_preferences.dart';
-// late SharedPreferences sharedPreferences;
+import 'package:library_app/providers/loan_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Jika Anda menggunakan SharedPreferences secara global, uncomment ini
-  // sharedPreferences = await SharedPreferences.getInstance();
 
   runApp(
     MultiProvider(
@@ -35,12 +22,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => BookProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
-        ChangeNotifierProvider(
-          create: (context) => LoanProvider(),
-        ), // Pastikan ini ada
-        // Tambahkan provider lain di sini jika ada:
-        // ChangeNotifierProvider(create: (context) => CategoryProvider()),
-        // ChangeNotifierProvider(create: (context) => TransactionProvider()),
+        ChangeNotifierProvider(create: (context) => LoanProvider()),
       ],
       child: const MyApp(),
     ),
@@ -65,10 +47,6 @@ class _MyAppState extends State<MyApp> {
     );
 
     final String? userId = userProvider.userId;
-
-    // Panggil setUserId di NotificationProvider.
-    // Ini akan memicu NotificationProvider untuk mulai/menghentikan mendengarkan notifikasi
-    // sesuai dengan status autentikasi userId.
     notificationProvider.setUserId(userId);
 
     print(
@@ -87,8 +65,6 @@ class _MyAppState extends State<MyApp> {
       'DEBUG: Main Build: isAuthenticated: ${userProvider.isAuthenticated}',
     );
 
-    // PERBAIKAN KRUSIAL: Bungkus seluruh logika pemilihan screen dengan MaterialApp.
-    // MaterialApp menyediakan widget Directionality yang dibutuhkan oleh Scaffold.
     return MaterialApp(
       title: 'Perpustakaan Digital',
       theme: ThemeData(
@@ -96,12 +72,10 @@ class _MyAppState extends State<MyApp> {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Builder(
-        // Menggunakan Builder untuk mendapatkan BuildContext yang benar di dalam MaterialApp
         builder: (context) {
           if (userProvider.isLoading) {
             print('DEBUG: Main Build: Showing blue userProvider loading.');
             return const Scaffold(
-              // Scaffold ini sekarang aman di dalam MaterialApp
               body: Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
@@ -112,10 +86,10 @@ class _MyAppState extends State<MyApp> {
 
           if (userProvider.isAuthenticated) {
             print('DEBUG: Main Build: Showing HomeScreen.');
-            return const HomeScreen(); // HomeScreen sekarang aman
+            return const HomeScreen();
           } else {
             print('DEBUG: Main Build: Showing WelcomeScreen.');
-            return const WelcomeScreen(); // WelcomeScreen sekarang aman
+            return const WelcomeScreen();
           }
         },
       ),

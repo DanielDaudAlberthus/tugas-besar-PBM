@@ -1,14 +1,14 @@
 // lib/screens/book_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Untuk format tanggal
+import 'package:intl/intl.dart';
 import 'package:library_app/models/book.dart';
 import 'package:library_app/providers/book_provider.dart';
-import 'package:library_app/providers/loan_provider.dart'; // <<< Import LoanProvider
-import 'package:library_app/providers/user_provider.dart'; // <<< Import UserProvider
-import 'package:library_app/models/loan.dart'; // <<< Import model Loan
-import 'package:library_app/providers/notification_provider.dart'; // Import NotificationProvider
-import 'package:library_app/models/app_notification.dart'; // Import AppNotification model
+import 'package:library_app/providers/loan_provider.dart';
+import 'package:library_app/providers/user_provider.dart';
+import 'package:library_app/models/loan.dart';
+import 'package:library_app/providers/notification_provider.dart';
+import 'package:library_app/models/app_notification.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final Book book;

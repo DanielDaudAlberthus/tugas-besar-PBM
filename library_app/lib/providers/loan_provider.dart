@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:library_app/models/loan.dart';
 import 'package:library_app/models/book.dart';
-import 'package:library_app/providers/book_provider.dart'; // Diperlukan untuk update status buku
-import 'package:library_app/providers/user_provider.dart'; // Diperlukan untuk akses user ID
-import 'dart:async'; // Untuk StreamSubscription
+import 'package:library_app/providers/book_provider.dart';
+import 'package:library_app/providers/user_provider.dart';
+import 'dart:async';
 
 class LoanProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

@@ -1,7 +1,6 @@
-// lib/providers/book_provider.dart (Tambahkan atau modifikasi metode ini)
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/book.dart'; // Pastikan model Book diimport
+import '../models/book.dart';
 
 class BookProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
