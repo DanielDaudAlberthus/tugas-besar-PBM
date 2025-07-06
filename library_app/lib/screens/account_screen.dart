@@ -73,7 +73,7 @@ class AccountScreen extends StatelessWidget {
                     // Gunakan profileImageUrl dari Firebase jika ada, fallback ke default
                     backgroundImage: NetworkImage(
                       currentUser.profileImageUrl ??
-                          'https://via.placeholder.com/150/CCCCCC/FFFFFF?text=User', // Placeholder default
+                          'https://www.pngmart.com/files/23/Profile-PNG-HD.png', // Placeholder default
                     ),
                     backgroundColor: Colors.grey,
                   ),
