@@ -1,12 +1,28 @@
+// lib/screens/account_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:library_app/screens/edit_profile_screen.dart';
 import 'package:library_app/screens/borrowed_books_screen.dart';
 import 'package:library_app/screens/welcome_screen.dart';
-import 'package:library_app/providers/user_provider.dart'; // Import UserProvider
+import 'package:library_app/providers/user_provider.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
+
+  // >>> BARU: Metode untuk meluncurkan URL <<<
+  Future<void> _launchURL(BuildContext context, String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      // Tampilkan pesan kesalahan jika URL tidak bisa dibuka
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Tidak dapat membuka $url')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +34,6 @@ class AccountScreen extends StatelessWidget {
         // Jika pengguna belum login (misalnya setelah logout sukses),
         // bisa arahkan kembali ke WelcomeScreen
         if (currentUser == null) {
-          // Ini mungkin sudah ditangani oleh StreamBuilder di main.dart
-          // Tapi sebagai fallback jika navigasi tidak sempurna:
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const WelcomeScreen()),
@@ -59,7 +73,7 @@ class AccountScreen extends StatelessWidget {
                     // Gunakan profileImageUrl dari Firebase jika ada, fallback ke default
                     backgroundImage: NetworkImage(
                       currentUser.profileImageUrl ??
-                          'https://via.placeholder.com/150/CCCCCC/FFFFFF?text=User',
+                          'https://via.placeholder.com/150/CCCCCC/FFFFFF?text=User', // Placeholder default
                     ),
                     backgroundColor: Colors.grey,
                   ),
@@ -129,32 +143,18 @@ class AccountScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildSettingsOption(
-                    context,
-                    icon: Icons.lock_outline,
-                    title: 'Ganti Kata Sandi',
-                    onTap: () async {
-                      // Tambahkan async
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Silakan periksa email Anda untuk reset kata sandi (simulasi).',
-                          ),
-                        ),
-                      );
-                      // Contoh implementasi untuk lupa kata sandi
-                      // try {
-                      //   await auth.FirebaseAuth.instance.sendPasswordResetEmail(email: currentUser.email);
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     const SnackBar(content: Text('Link reset kata sandi telah dikirim ke email Anda!')),
-                      //   );
-                      // } catch (e) {
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     SnackBar(content: Text('Gagal mengirim link reset: $e')),
-                      //   );
-                      // }
-                    },
-                  ),
+                  // Anda mungkin punya ChangePasswordScreen
+                  // _buildSettingsOption(
+                  //   context,
+                  //   icon: Icons.lock_outline,
+                  //   title: 'Ganti Kata Sandi',
+                  //   onTap: () {
+                  //     // Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangePasswordScreen()));
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       const SnackBar(content: Text('Halaman Ganti Kata Sandi (simulasi)!')),
+                  //     );
+                  //   },
+                  // ),
                   _buildSettingsOption(
                     context,
                     icon: Icons.notifications_none,
@@ -173,14 +173,11 @@ class AccountScreen extends StatelessWidget {
                     context,
                     icon: Icons.help_outline,
                     title: 'Bantuan & Dukungan',
+                    // >>> PERUBAHAN: Hubungkan ke _launchURL <<<
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Halaman Bantuan & Dukungan (simulasi)!',
-                          ),
-                        ),
-                      );
+                      const String githubRepoUrl =
+                          'https://github.com/DanielDaudAlberthus/tugas-besar-PBM'; // Ganti dengan URL repo GitHub Anda
+                      _launchURL(context, githubRepoUrl);
                     },
                   ),
                   const SizedBox(height: 30),
