@@ -51,14 +51,14 @@ User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan k
 * KERIKA DI PINJAM<br>
 ![WhatsApp Image 2025-07-06 at 12 45 19_c2cd8c2a](https://github.com/user-attachments/assets/dec4d81d-8225-4062-aa3c-514452f7cdbc)<br>
 
-* KETIKA INGIN KEMBALIKAN
-![WhatsApp Image 2025-07-06 at 13 04 34_45bce174](https://github.com/user-attachments/assets/3ce96d9e-fe1a-4f4d-8abb-23187fbbf71d)
+* KETIKA INGIN KEMBALIKAN<br>
+![WhatsApp Image 2025-07-06 at 13 04 34_45bce174](https://github.com/user-attachments/assets/3ce96d9e-fe1a-4f4d-8abb-23187fbbf71d)<br>
 
-* SETELAH DI KEMBALIKAN
-![image](https://github.com/user-attachments/assets/27f03340-b608-4158-b1de-3c5f6f95d7eb)
+* SETELAH DI KEMBALIKAN<br>
+![image](https://github.com/user-attachments/assets/27f03340-b608-4158-b1de-3c5f6f95d7eb)<br>
 
-* Tampilan ketika buku sedang dipinjam user lain
-![WhatsApp Image 2025-07-06 at 13 04 34_3ddfdeb4](https://github.com/user-attachments/assets/729eb139-69a4-4072-a84d-526d95b696cb)
+* Tampilan ketika buku sedang dipinjam user lain<br>
+![WhatsApp Image 2025-07-06 at 13 04 34_3ddfdeb4](https://github.com/user-attachments/assets/729eb139-69a4-4072-a84d-526d95b696cb)<br>
 
 # * Akun
   Pada tampilan akun user bisa mencari jenis buku apa yang akan user pinjam
@@ -69,12 +69,12 @@ User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan k
   ![image](https://github.com/user-attachments/assets/db93fec8-1601-43be-bcd3-5907c46b7484)
 
 # * Edit Profile Screen
-  User bisa melakukan edit profile pada tampilan Akun saya
-  ![image](https://github.com/user-attachments/assets/76f976e5-f72a-48ae-b51f-d508ec0e72b5)
-  Tidak hanya itu user bisa melihat riwayat peminjaman buku yang sudah ataupun sedang dilakukan
-![image](https://github.com/user-attachments/assets/8890c6de-7b1b-4634-82ca-e8363eee2b99)
-  Tampilan riwayat user ketika sedang melakukan pemeinjaman buku
-  ![WhatsApp Image 2025-07-06 at 12 57 26_ff8de55f](https://github.com/user-attachments/assets/fac6e124-7328-4eb3-9e90-ba736c69ef3f)
+  User bisa melakukan edit profile pada tampilan Akun saya<br>
+  ![image](https://github.com/user-attachments/assets/76f976e5-f72a-48ae-b51f-d508ec0e72b5)<br>
+  Tidak hanya itu user bisa melihat riwayat peminjaman buku yang sudah ataupun sedang dilakukan<br>
+![image](https://github.com/user-attachments/assets/8890c6de-7b1b-4634-82ca-e8363eee2b99)<br>
+  Tampilan riwayat user ketika sedang melakukan pemeinjaman buku<br>
+  ![WhatsApp Image 2025-07-06 at 12 57 26_ff8de55f](https://github.com/user-attachments/assets/fac6e124-7328-4eb3-9e90-ba736c69ef3f)<br>
 
 # Tampilan Manajemen Perpustakaan Admin
 * Tampilan Beranda
