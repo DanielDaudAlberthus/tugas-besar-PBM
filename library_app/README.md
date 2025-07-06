@@ -77,17 +77,16 @@ User bisa melihat detail buku terlebih dahulu sebelum melakukan peminjaman dan k
   ![WhatsApp Image 2025-07-06 at 12 57 26_ff8de55f](https://github.com/user-attachments/assets/fac6e124-7328-4eb3-9e90-ba736c69ef3f)<br>
 
 # Tampilan Manajemen Perpustakaan Admin
-* Tampilan Beranda
-  Admin bisa melihat bahwa buku itu sedang di pinjam oleh user
-  ![WhatsApp Image 2025-07-06 at 12 47 48_e050553d](https://github.com/user-attachments/assets/b6956485-632d-4691-b9a8-4a8b18632155)
-  Tampilan ketika admin ingin menginput buku baru untuk di perpustakaan
-  ![image](https://github.com/user-attachments/assets/2e9f9a5b-0cde-40b7-b502-f36b6ee454fa)
-* Tampilan Akun
-  Tampilan akun admin dapat melihat riwayat peminjaman buku oleh user
-  ![image](https://github.com/user-attachments/assets/12388c1a-937f-4f2f-90ce-cad2a88fdc91)
+* Tampilan Beranda<br>
+  Admin bisa melihat bahwa buku itu sedang di pinjam oleh user<br>
+  ![WhatsApp Image 2025-07-06 at 12 47 48_e050553d](https://github.com/user-attachments/assets/b6956485-632d-4691-b9a8-4a8b18632155)<br>
+  Tampilan ketika admin ingin menginput buku baru untuk di perpustakaan<br>
+  ![image](https://github.com/user-attachments/assets/2e9f9a5b-0cde-40b7-b502-f36b6ee454fa)<br>
+* Tampilan Akun<br>
+  Tampilan akun admin dapat melihat riwayat peminjaman buku oleh user<br>
+  ![image](https://github.com/user-attachments/assets/12388c1a-937f-4f2f-90ce-cad2a88fdc91)<br>
 
 ## KESIMPULAN
-**## Kesimpulan
 
 Aplikasi Manajemen Perpustakaan ini dibangun untuk memberikan kemudahan bagi pengguna dalam mengakses dan mengelola layanan perpustakaan secara digital. Melalui fitur-fitur seperti pencarian buku, peminjaman, pengembalian, notifikasi, dan riwayat aktivitas, aplikasi ini membantu siswa, guru, maupun pustakawan untuk berinteraksi tanpa harus datang langsung ke perpustakaan.
 
