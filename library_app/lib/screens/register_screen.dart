@@ -1,9 +1,10 @@
+// lib/screens/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:library_app/providers/user_provider.dart';
 import 'package:library_app/screens/home_screen.dart';
-import 'package:library_app/screens/login_screen.dart'; // <--- PASTIKAN INI ADA DAN BENAR
+import 'package:library_app/screens/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +19,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  //Variabel untuk mengontrol visibilitas kata sandi
+  bool _isPasswordVisible = false;
+
   void _register() async {
     if (_formKey.currentState!.validate()) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -31,7 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // --- Perbaikan untuk 'BuildContext across async gaps' ---
         if (!mounted)
           return; // Penting: cek mounted sebelum menggunakan context
-        // ----------------------------------------------------
 
         ScaffoldMessenger.of(
           context,
@@ -68,6 +71,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
       }
     }
+  }
+
+  // >>> BARU: Metode untuk mengubah visibilitas kata sandi <<<
+  void _togglePasswordVisibility() {
+    setState(() {
+      _isPasswordVisible = !_isPasswordVisible;
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -138,20 +156,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 TextFormField(
                   controller: _passwordController,
+                  // >>> PERUBAHAN: Gunakan _isPasswordVisible untuk obscureText <<<
+                  obscureText:
+                      !_isPasswordVisible, // True jika _isPasswordVisible false (sembunyi)
                   decoration: InputDecoration(
                     labelText: 'Kata Sandi',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     prefixIcon: const Icon(Icons.lock),
+                    // >>> PERUBAHAN: Gunakan _isPasswordVisible untuk ikon suffixIcon <<<
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.visibility),
-                      onPressed: () {
-                        // Logika untuk menampilkan/menyembunyikan kata sandi
-                      },
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed:
+                          _togglePasswordVisibility, // Panggil metode toggle
                     ),
                   ),
-                  obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Kata Sandi tidak boleh kosong';

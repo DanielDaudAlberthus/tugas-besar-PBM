@@ -1,9 +1,9 @@
+// lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart'
-    as auth; // Import Firebase Auth
-import 'package:library_app/providers/user_provider.dart'; // Import UserProvider
-import 'package:library_app/screens/home_screen.dart'; // Import HomeScreen
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:library_app/providers/user_provider.dart';
+import 'package:library_app/screens/home_screen.dart';
 import 'package:library_app/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,6 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  // >>> BARU: Variabel untuk mengontrol visibilitas kata sandi <<<
+  bool _isPasswordVisible = false;
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
@@ -69,6 +72,20 @@ class _LoginScreenState extends State<LoginScreen> {
         ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
       }
     }
+  }
+
+  // >>> BARU: Metode untuk mengubah visibilitas kata sandi <<<
+  void _togglePasswordVisibility() {
+    setState(() {
+      _isPasswordVisible = !_isPasswordVisible;
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -125,20 +142,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 TextFormField(
                   controller: _passwordController,
+                  // >>> PERUBAHAN: Gunakan _isPasswordVisible untuk obscureText <<<
+                  obscureText:
+                      !_isPasswordVisible, // True jika _isPasswordVisible false (sembunyi)
                   decoration: InputDecoration(
                     labelText: 'Kata Sandi',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     prefixIcon: const Icon(Icons.lock),
+                    // >>> PERUBAHAN: Gunakan _isPasswordVisible untuk ikon suffixIcon <<<
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.visibility),
-                      onPressed: () {
-                        // Logika untuk menampilkan/menyembunyikan kata sandi
-                      },
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed:
+                          _togglePasswordVisibility, // Panggil metode toggle
                     ),
                   ),
-                  obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Kata Sandi tidak boleh kosong';
